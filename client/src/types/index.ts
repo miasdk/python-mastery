@@ -45,6 +45,12 @@ export interface CodeExecutionResult {
   test_results: TestResult[];
   output: string;
   error?: string;
+  progress?: {
+    is_completed: boolean;
+    attempts: number;
+    best_time?: number;
+    hints_used: number;
+  };
 }
 
 export interface Lesson {

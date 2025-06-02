@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useRoute } from "wouter";
+import { useRoute, useLocation } from "wouter";
 import { Sidebar } from "@/components/sidebar";
 import { ProblemDescription } from "@/components/problem-description";
 import { CodeEditor } from "@/components/code-editor";
@@ -16,6 +16,7 @@ export default function Problem() {
   const [, params] = useRoute("/problem/:id");
   const problemId = params?.id ? parseInt(params.id) : null;
   const queryClient = useQueryClient();
+  const [, setLocation] = useLocation();
   
   // Mock user ID - in a real app, this would come from authentication
   const userId = 1;
@@ -44,6 +45,12 @@ export default function Problem() {
   const { data: dashboardData } = useQuery<DashboardData>({
     queryKey: [`/api/dashboard/${userId}`],
   });
+
+  // Reset state when problem ID changes
+  useEffect(() => {
+    setCode("");
+    setExecutionResult(undefined);
+  }, [problemId]);
 
   // Initialize code when problem loads
   useEffect(() => {
@@ -137,9 +144,10 @@ export default function Problem() {
   };
 
   const handleNextProblem = () => {
-    // Find next problem in curriculum
-    if (dashboardData?.current_problem) {
-      window.location.href = `/problem/${dashboardData.current_problem.id}`;
+    // Navigate to next problem in sequence
+    if (problemId) {
+      const nextProblemId = problemId + 1;
+      setLocation(`/problem/${nextProblemId}`);
     }
   };
 
@@ -244,7 +252,7 @@ export default function Problem() {
           <OutputPanel
             result={executionResult}
             onNextProblem={handleNextProblem}
-            showNextButton={executionResult?.success && executionResult.progress?.is_completed}
+            showNextButton={!!(executionResult?.success && executionResult?.progress?.is_completed)}
           />
         </div>
       </div>
