@@ -78,7 +78,12 @@ export function ProblemDescription({ problem, onHintUsed }: ProblemDescriptionPr
               if (line.includes('Skills Practiced:')) {
                 const parts = line.split('Skills Practiced:');
                 if (parts.length === 2) {
-                  const skills = parts[1].trim().split(' • ');
+                  let skillsText = parts[1].trim();
+                  // Remove any leading ** formatting
+                  if (skillsText.startsWith('**')) {
+                    skillsText = skillsText.substring(2).trim();
+                  }
+                  const skills = skillsText.split(' • ');
                   return (
                     <div key={index} className="mb-2">
                       <span className="font-medium text-gray-900">Skills Practiced: </span>
