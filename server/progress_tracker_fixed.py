@@ -60,14 +60,17 @@ class ProgressTracker:
                     {"user_id": user_id}
                 )
                 
-                # Award XP
-                base_xp = 50
-                attempts = self.db.execute(
-                    text("SELECT attempts FROM user_progress WHERE user_id = :user_id AND problem_id = :problem_id"),
+                # Get problem's actual XP reward and attempts
+                problem_data = self.db.execute(
+                    text("SELECT p.xp_reward, up.attempts FROM problems p JOIN user_progress up ON p.id = up.problem_id WHERE up.user_id = :user_id AND up.problem_id = :problem_id"),
                     {"user_id": user_id, "problem_id": problem_id}
-                ).fetchone().attempts
+                ).fetchone()
                 
-                efficiency_bonus = max(0, 45 - (attempts - 1) * 5)
+                base_xp = problem_data.xp_reward
+                attempts = problem_data.attempts
+                
+                # Small efficiency bonus (max 25% of base XP for first attempt)
+                efficiency_bonus = max(0, int(base_xp * 0.25) - (attempts - 1) * 2)
                 xp_gained = base_xp + efficiency_bonus
                 
                 # Update user XP
