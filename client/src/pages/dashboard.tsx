@@ -173,61 +173,6 @@ export default function Dashboard() {
               })()}
             </div>
 
-            {/* Level Benefits */}
-            {(() => {
-              const levelInfo = calculateLevel(dashboardData.stats.total_xp);
-              const currentBenefits = getLevelBenefits(levelInfo.level);
-              const nextBenefits = getNextLevelBenefits(levelInfo.level);
-              
-              return (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center">
-                        <Award className="w-5 h-5 mr-2 text-blue-600" />
-                        Level {levelInfo.level} Benefits
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-sm text-gray-600 mb-3">What you've unlocked:</p>
-                      <ul className="space-y-2">
-                        {currentBenefits.map((benefit, index) => (
-                          <li key={index} className="flex items-center">
-                            <div className="w-2 h-2 bg-green-500 rounded-full mr-3 flex-shrink-0"></div>
-                            <span className="text-sm">{benefit}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </CardContent>
-                  </Card>
-
-                  {levelInfo.level < 5 && (
-                    <Card>
-                      <CardHeader>
-                        <CardTitle className="flex items-center">
-                          <Star className="w-5 h-5 mr-2 text-amber-500" />
-                          Next Level Rewards
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <p className="text-sm text-gray-600 mb-3">
-                          {levelInfo.xpForNextLevel - levelInfo.currentXP} XP to unlock:
-                        </p>
-                        <ul className="space-y-2">
-                          {nextBenefits.map((benefit, index) => (
-                            <li key={index} className="flex items-center">
-                              <div className="w-2 h-2 bg-amber-500 rounded-full mr-3 flex-shrink-0"></div>
-                              <span className="text-sm">{benefit}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </CardContent>
-                    </Card>
-                  )}
-                </div>
-              );
-            })()}
-
             {/* Continue Learning */}
             {dashboardData.current_problem && (
               <Card>
