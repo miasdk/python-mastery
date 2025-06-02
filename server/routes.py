@@ -75,8 +75,12 @@ async def get_user(user_id: int, db: Session = Depends(get_db)):
     return user
 
 @router.get("/dashboard/{user_id}")
-async def get_dashboard(user_id: int, db: Session = Depends(get_db)):
+async def get_dashboard(user_id: int, db: Session = Depends(get_db), response: Response = None):
     """Get user dashboard with progress and curriculum"""
+    if response:
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Expires"] = "0"
     progress_tracker = ProgressTracker(db)
     dashboard_data = progress_tracker.get_user_progress_summary(user_id)
     
@@ -146,22 +150,29 @@ async def get_dashboard(user_id: int, db: Session = Depends(get_db)):
     
     dashboard_data["sections"] = sections_with_progress
     
-    # Get current problem (first incomplete problem)
+    # Get current problem (first incomplete problem) - fetch fresh from DB
     current_problem = None
-    for section in sections_with_progress:
-        if not section["is_locked"]:
-            for lesson in section["lessons"]:
-                if not lesson["is_locked"]:
-                    for problem in lesson["problems"]:
-                        if not problem["is_completed"]:
-                            current_problem = problem
-                            break
-                    if current_problem:
-                        break
-            if current_problem:
-                break
+    first_incomplete = db.query(Problem).join(UserProgress, 
+        (UserProgress.problem_id == Problem.id) & (UserProgress.user_id == user_id), 
+        isouter=True
+    ).filter(
+        (UserProgress.is_completed == False) | (UserProgress.is_completed == None)
+    ).order_by(Problem.order_index).first()
+    
+    if first_incomplete:
+        current_problem = {
+            "id": first_incomplete.id,
+            "title": first_incomplete.title,
+            "description": first_incomplete.description,
+            "difficulty": first_incomplete.difficulty,
+            "xp_reward": first_incomplete.xp_reward,
+            "is_completed": False,
+            "attempts": 0,
+            "best_time": None
+        }
     
     dashboard_data["current_problem"] = current_problem
+    dashboard_data["timestamp"] = datetime.utcnow().isoformat()
     
     return dashboard_data
 
