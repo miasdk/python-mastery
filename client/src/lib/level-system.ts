@@ -65,11 +65,13 @@ export function calculateLevel(totalXP: number): LevelInfo {
 
 export function getLevelBenefits(level: number): string[] {
   const benefits = {
-    1: ["Access to Variables & Data Types section", "Basic Python syntax learning"],
-    2: ["Unlocked Operations section", "Advanced calculations and math"],
-    3: ["Unlocked String Manipulation", "Real-world text processing"],
-    4: ["Unlocked Control Flow", "Conditionals and decision making"],
-    5: ["Master status achieved", "Access to all advanced features", "Exclusive Python challenges"]
+    1: ["Access to basic problems", "Python fundamentals"],
+    2: ["Access to all Easy problems", "Code validation features"],
+    3: ["Unlock Hard difficulty problems", "Advanced debugging tools"],
+    4: ["Unlock bonus algorithm challenges", "Code optimization features"],
+    5: ["Unlock interview preparation problems", "Performance analysis tools"],
+    6: ["Unlock advanced optimization challenges", "Expert-level debugging"],
+    7: ["Exclusive Master problem sets", "Early access to new features", "Profile achievement badges"]
   };
   return benefits[level as keyof typeof benefits] || [];
 }

@@ -74,6 +74,17 @@ export function Sidebar({ sections, currentProblemId, stats, achievements }: Sid
                 </span>
               </div>
               <Progress value={levelInfo.progressPercentage} className="h-1.5" />
+              
+              {/* Next Unlock Display */}
+              {levelInfo.nextUnlock && levelInfo.xpToNextUnlock && (
+                <div className="mt-2 p-2 bg-amber-50 border border-amber-200 rounded">
+                  <div className="text-xs font-medium text-amber-800">Next Unlock:</div>
+                  <div className="text-xs text-amber-700">{levelInfo.nextUnlock}</div>
+                  <div className="text-xs text-amber-600 mt-1">
+                    {levelInfo.xpToNextUnlock} XP needed
+                  </div>
+                </div>
+              )}
             </div>
           );
         })()}
