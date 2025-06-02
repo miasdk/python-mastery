@@ -319,25 +319,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
                            !hasReturn ? 'Missing return statement' : 'Unknown error';
         
         outputMessage = `
-┌─ Python Console ─────────────────────────────────┐
-│                                                  │
-│  >>> Running your code...                       │
-│  Error: ${primaryError}                          │
-│                                                  │
-└──────────────────────────────────────────────────┘
+>>> Running your code...
+Error: ${primaryError}
 
-    ❌ Execution Failed
-    
-    Code Analysis:
-    ${!hasFunction ? '    ❌ Function definition: Missing' : '    ✅ Function definition: Complete'}
-    ${!hasReturn ? '    ❌ Return statement: Missing' : '    ✅ Return statement: Present'}
-    ${!hasValidPythonSyntax ? '    ❌ Python syntax: Invalid' : '    ✅ Python syntax: Valid'}
-    ${!contentValidation ? '    ❌ Variable assignments: Invalid' : '    ✅ Variable assignments: Valid'}
-    
-    Issue Details:
-    ${primaryError}
-    
-    Fix the above issues and try again.`;
+❌ Code execution failed
+
+${!hasFunction ? '❌ Function definition missing' : '✅ Function definition complete'}
+${!hasReturn ? '❌ Return statement missing' : '✅ Return statement present'}
+${!hasValidPythonSyntax ? '❌ Python syntax invalid' : '✅ Python syntax valid'}
+${!contentValidation ? '❌ Variable assignments invalid' : '✅ Variable assignments valid'}
+
+Fix the issues above and try again.`;
       }
 
       const result = {
@@ -456,68 +448,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       let outputMessage = "";
       if (allPassed) {
-        // Extract function name and simulate actual execution output
+        // Extract function name and get expected result for display
         const functionMatch = code.match(/def\s+(\w+)/);
         const functionName = functionMatch ? functionMatch[1] : 'your_function';
         
-        // Extract actual values from the user's code
-        const nameMatch = code.match(/name\s*=\s*["']([^"']+)["']/);
-        const ageMatch = code.match(/age\s*=\s*(\d+)/);
-        const cityMatch = code.match(/city\s*=\s*["']([^"']+)["']/);
-        const professionMatch = code.match(/profession\s*=\s*["']([^"']+)["']/);
+        // Get expected result from test case for display
+        const expectedResult = testCases[0]?.expected;
+        let displayResult = 'Success';
         
-        const actualValues = [
-          nameMatch ? nameMatch[1] : "unknown",
-          ageMatch ? parseInt(ageMatch[1]) : 0,
-          cityMatch ? cityMatch[1] : "unknown", 
-          professionMatch ? professionMatch[1] : "unknown"
-        ];
-        
-        const resultDisplay = `('${actualValues[0]}', ${actualValues[1]}, '${actualValues[2]}', '${actualValues[3]}')`;
+        if (expectedResult !== undefined) {
+          if (typeof expectedResult === 'string') {
+            displayResult = `'${expectedResult}'`;
+          } else if (Array.isArray(expectedResult) || (typeof expectedResult === 'object' && expectedResult !== null)) {
+            displayResult = JSON.stringify(expectedResult).replace(/"/g, "'");
+          } else {
+            displayResult = String(expectedResult);
+          }
+        }
         
         outputMessage = `
-┌─ Python Console ─────────────────────────────────┐
-│                                                  │
-│  >>> ${functionName}()                           │
-│  ${resultDisplay}                                │
-│                                                  │
-└──────────────────────────────────────────────────┘
+>>> ${functionName}()
+${displayResult}
 
-    🎉 Problem Completed Successfully!
-    
-    Test Results:
-    ✅ Function definition: Complete
-    ✅ Return statement: Present  
-    ✅ Variable assignments: Valid
-    ✅ All test cases: Passed
-    
-    Execution time: ${executionTime}ms
-    
-    Great work! You can now:
-    • Navigate to the next problem
-    • Return to dashboard to see progress
-    • Continue your Python journey`;
+✅ All tests passed
+Execution time: ${executionTime}ms`;
       } else {
         outputMessage = `
-┌─ Python Console ─────────────────────────────────┐
-│                                                  │
-│  >>> Running your code...                       │
-│  Error: ${errorMessage}                          │
-│                                                  │
-└──────────────────────────────────────────────────┘
+>>> Running your code...
+Error: ${errorMessage}
 
-    ❌ Submission Failed
-    
-    Code Analysis:
-    ${!hasFunction ? '    ❌ Function definition: Missing' : '    ✅ Function definition: Complete'}
-    ${!hasReturn ? '    ❌ Return statement: Missing' : '    ✅ Return statement: Present'}
-    ${!hasValidPythonSyntax ? '    ❌ Python syntax: Invalid' : '    ✅ Python syntax: Valid'}
-    ${!problemSpecificValidation ? '    ❌ Variable assignments: Invalid' : '    ✅ Variable assignments: Valid'}
-    
-    Issue Details:
-    ${errorMessage}
-    
-    Fix the above issues and try submitting again.`;
+❌ Submission failed
+
+${!hasFunction ? '❌ Function definition missing' : '✅ Function definition complete'}
+${!hasReturn ? '❌ Return statement missing' : '✅ Return statement present'}
+${!hasValidPythonSyntax ? '❌ Python syntax invalid' : '✅ Python syntax valid'}
+${!problemSpecificValidation ? '❌ Implementation incomplete' : '✅ Implementation complete'}
+
+Fix the issues above and try submitting again.`;
       }
       
       res.json({
