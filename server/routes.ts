@@ -152,6 +152,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get problem details
+  app.get("/api/problems/:problemId", async (req, res) => {
+    try {
+      const problemId = parseInt(req.params.problemId);
+      const userId = parseInt(req.query.user_id as string) || 1;
+      
+      // Get problem
+      const problem = await database
+        .select()
+        .from(schema.problems)
+        .where(eq(schema.problems.id, problemId))
+        .limit(1);
+      
+      if (problem.length === 0) {
+        return res.status(404).json({ error: "Problem not found" });
+      }
+      
+      const problemData = problem[0];
+      
+      // Get user progress for this problem
+      const progress = await database
+        .select()
+        .from(schema.userProgress)
+        .where(eq(schema.userProgress.problemId, problemId))
+        .where(eq(schema.userProgress.userId, userId))
+        .limit(1);
+      
+      const progressData = progress[0];
+      
+      // Get lesson and section info for breadcrumb
+      const lesson = await database
+        .select()
+        .from(schema.lessons)
+        .where(eq(schema.lessons.id, problemData.lessonId))
+        .limit(1);
+      
+      const section = await database
+        .select()
+        .from(schema.sections)
+        .where(eq(schema.sections.id, lesson[0].sectionId))
+        .limit(1);
+      
+      res.json({
+        id: problemData.id,
+        title: problemData.title,
+        description: problemData.description,
+        difficulty: problemData.difficulty,
+        order_index: problemData.orderIndex,
+        starter_code: problemData.starterCode,
+        hints: problemData.hints,
+        xp_reward: problemData.xpReward,
+        test_cases: problemData.testCases,
+        progress: {
+          is_completed: progressData?.isCompleted || false,
+          attempts: progressData?.attempts || 0,
+          best_time: progressData?.bestTime || null,
+          hints_used: progressData?.hintsUsed || 0
+        },
+        breadcrumb: {
+          section: section[0].title,
+          lesson: lesson[0].title
+        }
+      });
+    } catch (error) {
+      console.error("Error fetching problem:", error);
+      res.status(500).json({ error: "Failed to fetch problem" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
