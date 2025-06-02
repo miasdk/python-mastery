@@ -86,14 +86,30 @@ export function ProblemDescription({ problem, onHintUsed }: ProblemDescriptionPr
                   continue;
                 }
                 
-                // Handle bold text
+                // Handle bold text (difficulty levels and titles)
                 if (line.startsWith('**') && line.endsWith('**') && line.length > 4) {
                   const text = line.slice(2, -2);
-                  elements.push(
-                    <div key={i} className="font-semibold text-gray-900 mb-2 text-base">
-                      {text}
-                    </div>
-                  );
+                  
+                  // Check if it's a difficulty level
+                  if (text === 'Easy' || text === 'Medium' || text === 'Hard') {
+                    const difficultyColors = {
+                      'Easy': 'bg-emerald-100 text-emerald-700 border-emerald-200',
+                      'Medium': 'bg-amber-100 text-amber-700 border-amber-200', 
+                      'Hard': 'bg-rose-100 text-rose-700 border-rose-200'
+                    };
+                    elements.push(
+                      <span key={i} className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${difficultyColors[text as keyof typeof difficultyColors]} mb-3`}>
+                        {text}
+                      </span>
+                    );
+                  } else {
+                    // Regular bold text (like problem titles)
+                    elements.push(
+                      <h2 key={i} className="font-semibold text-slate-900 mb-3 text-lg">
+                        {text}
+                      </h2>
+                    );
+                  }
                   continue;
                 }
                 
@@ -109,13 +125,16 @@ export function ProblemDescription({ problem, onHintUsed }: ProblemDescriptionPr
                 }
                 
                 // Handle section headers (Description:, Example:, etc.)
-                if (line.includes(':') && (line.includes('Description') || line.includes('Example') || line.includes('Skills') || line.includes('Objective'))) {
-                  elements.push(
-                    <div key={i} className="font-medium text-gray-900 mb-2 mt-3">
-                      {line.replace(/^\*\*/, '').replace(/\*\*$/, '')}
-                    </div>
-                  );
-                  continue;
+                if (line.includes(':')) {
+                  const cleanLine = line.replace(/^\*\*/, '').replace(/\*\*$/, '').replace(/\*\*/g, '');
+                  if (cleanLine.includes('Description') || cleanLine.includes('Example') || cleanLine.includes('Skills') || cleanLine.includes('Objective')) {
+                    elements.push(
+                      <h3 key={i} className="font-medium text-slate-800 text-sm uppercase tracking-wide mb-2 mt-4 border-b border-slate-200 pb-1">
+                        {cleanLine}
+                      </h3>
+                    );
+                    continue;
+                  }
                 }
                 
                 // Handle empty lines
@@ -126,9 +145,9 @@ export function ProblemDescription({ problem, onHintUsed }: ProblemDescriptionPr
                 
                 // Regular text
                 elements.push(
-                  <div key={i} className="mb-1 leading-relaxed">
+                  <p key={i} className="text-slate-700 leading-relaxed mb-2">
                     {line}
-                  </div>
+                  </p>
                 );
               }
               
