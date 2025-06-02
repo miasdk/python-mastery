@@ -535,7 +535,10 @@ class CurriculumGenerator:
                     }
                 ],
                 "hints": [
-                    "Use the len() function to get the length of a string"
+                    "Use len() function to get string length",
+                    "Use .upper() method to convert to uppercase", 
+                    "Use .lower() method to convert to lowercase",
+                    "Return all three values as a tuple"
                 ],
                 "xp_reward": 25
             }
@@ -544,26 +547,28 @@ class CurriculumGenerator:
     def _get_conditionals_problems(self) -> List[Dict[str, Any]]:
         return [
             {
-                "title": "Number Comparison",
-                "description": "Compare two numbers and return the larger one.",
+                "title": "Name Formatter",
+                "description": "**Name Formatter**\n**Easy - String Concatenation**\n\n**What You're Building:**\nCreate a contact management system for a business app. Format names and generate initials for professional displays.\n\n**Your Task:**\n- Combine first and last name with space\n- Extract first letter of each name for initials\n- Return full name and initials\n\n**Skills Practiced:** String Concatenation • String Indexing • Text Processing\n\n**Example:**\n```python\nfull_name, initials = format_name(\"John\", \"Smith\")\nprint(f\"{full_name} ({initials})\")  # John Smith (JS)\n```",
                 "difficulty": "easy",
-                "starter_code": "def max_number(a, b):\n    # Return the larger of the two numbers\n    # Your code here\n    pass",
-                "solution": "def max_number(a, b):\n    if a > b:\n        return a\n    else:\n        return b",
+                "starter_code": "def format_name(first_name, last_name):\n    # Create full name and initials\n    full_name = # Combine names with space\n    initials = # First letter of each name\n    return full_name, initials",
+                "solution": "def format_name(first_name, last_name):\n    full_name = first_name + \" \" + last_name\n    initials = first_name[0] + last_name[0]\n    return full_name, initials",
                 "test_cases": [
                     {
-                        "function_name": "max_number",
-                        "input": [10, 5],
-                        "expected": 10
+                        "function_name": "format_name",
+                        "input": ["John", "Smith"],
+                        "expected": ("John Smith", "JS")
                     },
                     {
-                        "function_name": "max_number",
-                        "input": [3, 8],
-                        "expected": 8
+                        "function_name": "format_name",
+                        "input": ["Alice", "Johnson"],
+                        "expected": ("Alice Johnson", "AJ")
                     }
                 ],
                 "hints": [
-                    "Use an if statement to compare the numbers",
-                    "Return the appropriate number based on the comparison"
+                    "Use + operator to concatenate strings",
+                    "Use [0] to get first character of a string",
+                    "Combine first[0] + last[0] for initials",
+                    "Add space between first and last name"
                 ],
                 "xp_reward": 35
             }
