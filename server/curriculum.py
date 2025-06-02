@@ -14,7 +14,7 @@ class CurriculumGenerator:
                     },
                     {
                         "title": "Basic Operations",
-                        "description": "Arithmetic operations and string manipulation",
+                        "description": "Arithmetic operations and mathematical calculations",
                         "problems": self._get_operations_problems()
                     },
                     {
@@ -82,76 +82,445 @@ class CurriculumGenerator:
     def _get_variables_problems(self) -> List[Dict[str, Any]]:
         return [
             {
-                "title": "Variable Assignment",
-                "description": "Create variables and assign values to them.",
+                "title": "Personal Information Card",
+                "description": "Create a digital business card by storing personal information in variables.",
                 "difficulty": "easy",
-                "starter_code": "# Create a variable called 'name' and assign your name to it\n# Create a variable called 'age' and assign your age to it\n\ndef get_variables():\n    # Your code here\n    return name, age",
-                "solution": "def get_variables():\n    name = \"Alice\"\n    age = 25\n    return name, age",
+                "starter_code": "def create_business_card():\n    # Create variables for your personal information\n    name = # Your name here\n    age = # Your age here\n    city = # Your city here\n    profession = # Your profession here\n    return name, age, city, profession",
+                "solution": "def create_business_card():\n    name = \"Alice Johnson\"\n    age = 28\n    city = \"San Francisco\"\n    profession = \"Software Developer\"\n    return name, age, city, profession",
                 "test_cases": [
                     {
-                        "function_name": "get_variables",
+                        "function_name": "create_business_card",
                         "input": [],
-                        "expected": ("Alice", 25)
+                        "expected": ("Alice Johnson", 28, "San Francisco", "Software Developer")
                     }
                 ],
                 "hints": [
                     "Use the assignment operator (=) to assign values to variables",
                     "Strings should be enclosed in quotes",
-                    "Numbers don't need quotes"
+                    "Numbers don't need quotes",
+                    "Return all variables in the specified order"
                 ],
                 "xp_reward": 25
             },
             {
-                "title": "Data Type Conversion",
-                "description": "Convert between different data types.",
+                "title": "Temperature Converter Setup",
+                "description": "Store temperature values in different units for conversion calculations.",
                 "difficulty": "easy",
-                "starter_code": "def convert_types(num_str):\n    # Convert the string to an integer and return it\n    # Your code here\n    pass",
-                "solution": "def convert_types(num_str):\n    return int(num_str)",
+                "starter_code": "def temperature_data():\n    # Store temperature values\n    celsius = 25.0\n    # Calculate Fahrenheit (F = C * 9/5 + 32)\n    fahrenheit = # Your calculation here\n    is_freezing = # True if celsius is below 0\n    return celsius, fahrenheit, is_freezing",
+                "solution": "def temperature_data():\n    celsius = 25.0\n    fahrenheit = celsius * 9/5 + 32\n    is_freezing = celsius < 0\n    return celsius, fahrenheit, is_freezing",
                 "test_cases": [
                     {
-                        "function_name": "convert_types",
-                        "input": "42",
-                        "expected": 42
-                    },
-                    {
-                        "function_name": "convert_types",
-                        "input": "100",
-                        "expected": 100
+                        "function_name": "temperature_data",
+                        "input": [],
+                        "expected": (25.0, 77.0, False)
                     }
                 ],
                 "hints": [
-                    "Use the int() function to convert strings to integers",
-                    "Make sure to return the converted value"
+                    "Use the formula F = C * 9/5 + 32 for Fahrenheit conversion",
+                    "Boolean values are True or False (no quotes)",
+                    "Use comparison operators like < for boolean expressions"
                 ],
                 "xp_reward": 30
+            },
+            {
+                "title": "Shopping Item Details",
+                "description": "Store product information for an online store inventory system.",
+                "difficulty": "easy",
+                "starter_code": "def product_info():\n    # Store product details\n    product_name = \"Wireless Headphones\"\n    price = # Price as float\n    in_stock = # Boolean value\n    quantity = # Integer value\n    return product_name, price, in_stock, quantity",
+                "solution": "def product_info():\n    product_name = \"Wireless Headphones\"\n    price = 89.99\n    in_stock = True\n    quantity = 15\n    return product_name, price, in_stock, quantity",
+                "test_cases": [
+                    {
+                        "function_name": "product_info",
+                        "input": [],
+                        "expected": ("Wireless Headphones", 89.99, True, 15)
+                    }
+                ],
+                "hints": [
+                    "Prices should be float values (with decimal points)",
+                    "Boolean values are True or False",
+                    "Quantity should be an integer",
+                    "Make sure to return all values in order"
+                ],
+                "xp_reward": 25
+            },
+            {
+                "title": "Student Grade Calculator",
+                "description": "Calculate a student's final grade and determine pass/fail status.",
+                "difficulty": "medium",
+                "starter_code": "def calculate_final_grade(midterm, final_exam, homework):\n    # Calculate weighted average: midterm 30%, final 50%, homework 20%\n    final_grade = # Your calculation here\n    passed = # True if grade >= 60\n    return final_grade, passed",
+                "solution": "def calculate_final_grade(midterm, final_exam, homework):\n    final_grade = midterm * 0.3 + final_exam * 0.5 + homework * 0.2\n    passed = final_grade >= 60\n    return final_grade, passed",
+                "test_cases": [
+                    {
+                        "function_name": "calculate_final_grade",
+                        "input": [85, 78, 92],
+                        "expected": (82.1, True)
+                    },
+                    {
+                        "function_name": "calculate_final_grade",
+                        "input": [45, 55, 70],
+                        "expected": (55.0, False)
+                    }
+                ],
+                "hints": [
+                    "Multiply each score by its weight (30% = 0.3, etc.)",
+                    "Add all weighted scores together",
+                    "Use >= for the passing condition",
+                    "Round to one decimal place if needed"
+                ],
+                "xp_reward": 40
+            },
+            {
+                "title": "Data Type Detective",
+                "description": "Convert user input strings to appropriate data types for processing.",
+                "difficulty": "easy",
+                "starter_code": "def convert_user_input(age_str, height_str, is_student_str):\n    # Convert strings to appropriate types\n    age = # Convert to integer\n    height = # Convert to float\n    is_student = # Convert to boolean (\"true\" -> True, \"false\" -> False)\n    return age, height, is_student",
+                "solution": "def convert_user_input(age_str, height_str, is_student_str):\n    age = int(age_str)\n    height = float(height_str)\n    is_student = is_student_str.lower() == \"true\"\n    return age, height, is_student",
+                "test_cases": [
+                    {
+                        "function_name": "convert_user_input",
+                        "input": ["25", "5.8", "true"],
+                        "expected": (25, 5.8, True)
+                    },
+                    {
+                        "function_name": "convert_user_input",
+                        "input": ["30", "6.1", "false"],
+                        "expected": (30, 6.1, False)
+                    }
+                ],
+                "hints": [
+                    "Use int() to convert strings to integers",
+                    "Use float() to convert strings to floating-point numbers",
+                    "Compare string with \"true\" to get boolean value",
+                    "Use .lower() to handle case variations"
+                ],
+                "xp_reward": 35
+            },
+            {
+                "title": "Bank Account Balance",
+                "description": "Track bank account information and calculate interest earnings.",
+                "difficulty": "medium",
+                "starter_code": "def account_summary(initial_balance, monthly_deposit, interest_rate, months):\n    # Calculate final balance after deposits and interest\n    total_deposits = # Calculate total deposits\n    balance_before_interest = # Add deposits to initial balance\n    interest_earned = # Calculate interest on final balance\n    final_balance = # Add interest to balance\n    return total_deposits, interest_earned, final_balance",
+                "solution": "def account_summary(initial_balance, monthly_deposit, interest_rate, months):\n    total_deposits = monthly_deposit * months\n    balance_before_interest = initial_balance + total_deposits\n    interest_earned = balance_before_interest * interest_rate\n    final_balance = balance_before_interest + interest_earned\n    return total_deposits, interest_earned, final_balance",
+                "test_cases": [
+                    {
+                        "function_name": "account_summary",
+                        "input": [1000, 200, 0.05, 12],
+                        "expected": (2400, 170.0, 3570.0)
+                    }
+                ],
+                "hints": [
+                    "Multiply monthly deposit by number of months",
+                    "Add total deposits to initial balance",
+                    "Multiply balance by interest rate for interest earned",
+                    "Add interest to balance for final amount"
+                ],
+                "xp_reward": 45
+            },
+            {
+                "title": "Recipe Scaler",
+                "description": "Scale recipe ingredients based on number of servings needed.",
+                "difficulty": "medium",
+                "starter_code": "def scale_recipe(original_servings, desired_servings, flour_cups, sugar_cups, eggs):\n    # Calculate scaling factor and new ingredient amounts\n    scale_factor = # Calculate how much to scale\n    new_flour = # Scale flour amount\n    new_sugar = # Scale sugar amount\n    new_eggs = # Scale eggs (round to nearest whole number)\n    return scale_factor, new_flour, new_sugar, new_eggs",
+                "solution": "def scale_recipe(original_servings, desired_servings, flour_cups, sugar_cups, eggs):\n    scale_factor = desired_servings / original_servings\n    new_flour = flour_cups * scale_factor\n    new_sugar = sugar_cups * scale_factor\n    new_eggs = round(eggs * scale_factor)\n    return scale_factor, new_flour, new_sugar, new_eggs",
+                "test_cases": [
+                    {
+                        "function_name": "scale_recipe",
+                        "input": [4, 6, 2.0, 1.5, 2],
+                        "expected": (1.5, 3.0, 2.25, 3)
+                    }
+                ],
+                "hints": [
+                    "Divide desired servings by original servings for scale factor",
+                    "Multiply each ingredient by the scale factor",
+                    "Use round() function for eggs since you can't use partial eggs",
+                    "Return values in the specified order"
+                ],
+                "xp_reward": 40
+            },
+            {
+                "title": "Time Zone Converter",
+                "description": "Convert time between different time zones for international meetings.",
+                "difficulty": "hard",
+                "starter_code": "def convert_time_zones(hour_24, minute, timezone_offset_from, timezone_offset_to):\n    # Convert time from one timezone to another\n    # timezone_offset is hours from UTC (e.g., EST = -5, PST = -8)\n    total_minutes = # Convert to total minutes\n    utc_minutes = # Convert to UTC minutes\n    target_minutes = # Convert to target timezone minutes\n    new_hour = # Extract hour (handle 24-hour wrap)\n    new_minute = # Extract minute\n    return new_hour, new_minute",
+                "solution": "def convert_time_zones(hour_24, minute, timezone_offset_from, timezone_offset_to):\n    total_minutes = hour_24 * 60 + minute\n    utc_minutes = total_minutes - (timezone_offset_from * 60)\n    target_minutes = utc_minutes + (timezone_offset_to * 60)\n    new_hour = (target_minutes // 60) % 24\n    new_minute = target_minutes % 60\n    return new_hour, new_minute",
+                "test_cases": [
+                    {
+                        "function_name": "convert_time_zones",
+                        "input": [14, 30, -5, -8],
+                        "expected": (11, 30)
+                    },
+                    {
+                        "function_name": "convert_time_zones",
+                        "input": [9, 0, -8, 1],
+                        "expected": (18, 0)
+                    }
+                ],
+                "hints": [
+                    "Convert time to total minutes for easier calculation",
+                    "Subtract source timezone offset to get UTC",
+                    "Add target timezone offset to get target time",
+                    "Use modulo (%) to handle day boundaries"
+                ],
+                "xp_reward": 60
+            },
+            {
+                "title": "Investment Portfolio",
+                "description": "Calculate portfolio value and returns for different investment types.",
+                "difficulty": "hard",
+                "starter_code": "def portfolio_analysis(stocks_value, bonds_value, crypto_value, stocks_return, bonds_return, crypto_return):\n    # Calculate portfolio metrics\n    total_value = # Sum all investments\n    stocks_new_value = # Apply return to stocks\n    bonds_new_value = # Apply return to bonds\n    crypto_new_value = # Apply return to crypto\n    new_total_value = # Sum new values\n    total_return_percent = # Calculate percentage gain/loss\n    return total_value, new_total_value, total_return_percent",
+                "solution": "def portfolio_analysis(stocks_value, bonds_value, crypto_value, stocks_return, bonds_return, crypto_return):\n    total_value = stocks_value + bonds_value + crypto_value\n    stocks_new_value = stocks_value * (1 + stocks_return)\n    bonds_new_value = bonds_value * (1 + bonds_return)\n    crypto_new_value = crypto_value * (1 + crypto_return)\n    new_total_value = stocks_new_value + bonds_new_value + crypto_new_value\n    total_return_percent = ((new_total_value - total_value) / total_value) * 100\n    return total_value, new_total_value, total_return_percent",
+                "test_cases": [
+                    {
+                        "function_name": "portfolio_analysis",
+                        "input": [10000, 5000, 2000, 0.08, 0.03, -0.15],
+                        "expected": (17000, 16950.0, -0.29411764705882354)
+                    }
+                ],
+                "hints": [
+                    "Returns are decimals (8% = 0.08)",
+                    "New value = original_value * (1 + return_rate)",
+                    "Percentage return = (new - old) / old * 100",
+                    "Handle negative returns (losses) correctly"
+                ],
+                "xp_reward": 65
+            },
+            {
+                "title": "Health Metrics Calculator",
+                "description": "Calculate BMI and determine health category based on height and weight.",
+                "difficulty": "medium",
+                "starter_code": "def health_metrics(weight_kg, height_cm):\n    # Calculate BMI and health status\n    height_m = # Convert cm to meters\n    bmi = # Calculate BMI (weight / height^2)\n    # Determine category: < 18.5 underweight, 18.5-24.9 normal, 25-29.9 overweight, >= 30 obese\n    if bmi < 18.5:\n        category = \"underweight\"\n    # Complete the conditions\n    return bmi, category",
+                "solution": "def health_metrics(weight_kg, height_cm):\n    height_m = height_cm / 100\n    bmi = weight_kg / (height_m ** 2)\n    if bmi < 18.5:\n        category = \"underweight\"\n    elif bmi < 25:\n        category = \"normal\"\n    elif bmi < 30:\n        category = \"overweight\"\n    else:\n        category = \"obese\"\n    return round(bmi, 1), category",
+                "test_cases": [
+                    {
+                        "function_name": "health_metrics",
+                        "input": [70, 175],
+                        "expected": (22.9, "normal")
+                    },
+                    {
+                        "function_name": "health_metrics",
+                        "input": [85, 180],
+                        "expected": (26.2, "overweight")
+                    }
+                ],
+                "hints": [
+                    "Divide height in cm by 100 to get meters",
+                    "BMI = weight / (height in meters)^2",
+                    "Use elif for multiple conditions",
+                    "Round BMI to 1 decimal place"
+                ],
+                "xp_reward": 50
             }
         ]
 
     def _get_operations_problems(self) -> List[Dict[str, Any]]:
         return [
             {
-                "title": "Basic Calculator",
-                "description": "Perform basic arithmetic operations.",
+                "title": "Smart Calculator",
+                "description": "Create a calculator that handles basic arithmetic operations safely.",
                 "difficulty": "easy",
-                "starter_code": "def calculate(a, b, operation):\n    # Perform the operation (+, -, *, /) on a and b\n    # Your code here\n    pass",
-                "solution": "def calculate(a, b, operation):\n    if operation == '+':\n        return a + b\n    elif operation == '-':\n        return a - b\n    elif operation == '*':\n        return a * b\n    elif operation == '/':\n        return a / b",
+                "starter_code": "def smart_calculator(a, b, operation):\n    # Perform the operation (+, -, *, /) on a and b\n    # Handle division by zero\n    if operation == '+':\n        return # Your code here\n    elif operation == '-':\n        return # Your code here\n    # Complete other operations\n    pass",
+                "solution": "def smart_calculator(a, b, operation):\n    if operation == '+':\n        return a + b\n    elif operation == '-':\n        return a - b\n    elif operation == '*':\n        return a * b\n    elif operation == '/' and b != 0:\n        return a / b\n    else:\n        return 'Error'",
                 "test_cases": [
                     {
-                        "function_name": "calculate",
-                        "input": [10, 5, "+"],
-                        "expected": 15
+                        "function_name": "smart_calculator",
+                        "input": [15, 3, "+"],
+                        "expected": 18
                     },
                     {
-                        "function_name": "calculate",
-                        "input": [10, 5, "*"],
-                        "expected": 50
+                        "function_name": "smart_calculator",
+                        "input": [20, 4, "/"],
+                        "expected": 5.0
+                    },
+                    {
+                        "function_name": "smart_calculator",
+                        "input": [10, 0, "/"],
+                        "expected": "Error"
                     }
                 ],
                 "hints": [
                     "Use if-elif statements to check the operation",
-                    "Return the result of the arithmetic operation"
+                    "Check for division by zero before dividing",
+                    "Return 'Error' for invalid operations",
+                    "Remember that division returns float values"
+                ],
+                "xp_reward": 30
+            },
+            {
+                "title": "Tip Calculator",
+                "description": "Calculate tip amount and total bill for restaurant visits.",
+                "difficulty": "easy",
+                "starter_code": "def calculate_tip(bill_amount, tip_percentage, num_people):\n    # Calculate tip amount and total per person\n    tip_amount = # Calculate tip\n    total_bill = # Add tip to bill\n    per_person = # Divide by number of people\n    return tip_amount, total_bill, per_person",
+                "solution": "def calculate_tip(bill_amount, tip_percentage, num_people):\n    tip_amount = bill_amount * (tip_percentage / 100)\n    total_bill = bill_amount + tip_amount\n    per_person = total_bill / num_people\n    return round(tip_amount, 2), round(total_bill, 2), round(per_person, 2)",
+                "test_cases": [
+                    {
+                        "function_name": "calculate_tip",
+                        "input": [100.00, 18, 4],
+                        "expected": (18.0, 118.0, 29.5)
+                    },
+                    {
+                        "function_name": "calculate_tip",
+                        "input": [75.50, 20, 2],
+                        "expected": (15.1, 90.6, 45.3)
+                    }
+                ],
+                "hints": [
+                    "Convert percentage to decimal by dividing by 100",
+                    "Add tip amount to original bill for total",
+                    "Divide total by number of people",
+                    "Round to 2 decimal places for currency"
+                ],
+                "xp_reward": 35
+            },
+            {
+                "title": "Compound Interest Calculator",
+                "description": "Calculate compound interest for savings and investments.",
+                "difficulty": "medium",
+                "starter_code": "def compound_interest(principal, annual_rate, times_compounded, years):\n    # A = P(1 + r/n)^(nt)\n    # A = final amount, P = principal, r = annual rate, n = times compounded per year, t = years\n    amount = # Your calculation here\n    interest_earned = # Amount - principal\n    return amount, interest_earned",
+                "solution": "def compound_interest(principal, annual_rate, times_compounded, years):\n    amount = principal * (1 + annual_rate / times_compounded) ** (times_compounded * years)\n    interest_earned = amount - principal\n    return round(amount, 2), round(interest_earned, 2)",
+                "test_cases": [
+                    {
+                        "function_name": "compound_interest",
+                        "input": [1000, 0.05, 4, 10],
+                        "expected": (1643.62, 643.62)
+                    },
+                    {
+                        "function_name": "compound_interest",
+                        "input": [5000, 0.08, 12, 5],
+                        "expected": (7449.23, 2449.23)
+                    }
+                ],
+                "hints": [
+                    "Use the compound interest formula A = P(1 + r/n)^(nt)",
+                    "Use ** for exponentiation in Python",
+                    "Interest earned is final amount minus principal",
+                    "Round results to 2 decimal places"
+                ],
+                "xp_reward": 50
+            },
+            {
+                "title": "Distance and Speed Calculator",
+                "description": "Calculate distance, speed, or time using the distance formula.",
+                "difficulty": "medium",
+                "starter_code": "def calculate_motion(distance=None, speed=None, time=None):\n    # Given two values, calculate the third using: distance = speed * time\n    if distance is None:\n        result = # Calculate distance\n        return f\"Distance: {result} units\"\n    elif speed is None:\n        result = # Calculate speed\n        return f\"Speed: {result} units/time\"\n    elif time is None:\n        result = # Calculate time\n        return f\"Time: {result} time units\"",
+                "solution": "def calculate_motion(distance=None, speed=None, time=None):\n    if distance is None:\n        result = speed * time\n        return f\"Distance: {result} units\"\n    elif speed is None:\n        result = distance / time\n        return f\"Speed: {result} units/time\"\n    elif time is None:\n        result = distance / speed\n        return f\"Time: {result} time units\"",
+                "test_cases": [
+                    {
+                        "function_name": "calculate_motion",
+                        "input": [None, 60, 2],
+                        "expected": "Distance: 120 units"
+                    },
+                    {
+                        "function_name": "calculate_motion",
+                        "input": [300, None, 5],
+                        "expected": "Speed: 60.0 units/time"
+                    }
+                ],
+                "hints": [
+                    "Use distance = speed * time formula",
+                    "Rearrange formula based on which value is None",
+                    "Return formatted string as shown in examples",
+                    "Handle division carefully"
+                ],
+                "xp_reward": 45
+            },
+            {
+                "title": "Mortgage Payment Calculator",
+                "description": "Calculate monthly mortgage payments using financial formulas.",
+                "difficulty": "hard",
+                "starter_code": "def mortgage_payment(loan_amount, annual_rate, loan_term_years):\n    # Monthly payment = P * [r(1+r)^n] / [(1+r)^n - 1]\n    # P = loan amount, r = monthly rate, n = number of payments\n    monthly_rate = # Convert annual rate to monthly\n    num_payments = # Convert years to months\n    if monthly_rate == 0:\n        return loan_amount / num_payments  # No interest case\n    \n    monthly_payment = # Calculate using formula\n    total_paid = # Total amount paid over loan term\n    total_interest = # Interest paid over loan term\n    return monthly_payment, total_paid, total_interest",
+                "solution": "def mortgage_payment(loan_amount, annual_rate, loan_term_years):\n    monthly_rate = annual_rate / 12\n    num_payments = loan_term_years * 12\n    if monthly_rate == 0:\n        return loan_amount / num_payments\n    \n    monthly_payment = loan_amount * (monthly_rate * (1 + monthly_rate) ** num_payments) / ((1 + monthly_rate) ** num_payments - 1)\n    total_paid = monthly_payment * num_payments\n    total_interest = total_paid - loan_amount\n    return round(monthly_payment, 2), round(total_paid, 2), round(total_interest, 2)",
+                "test_cases": [
+                    {
+                        "function_name": "mortgage_payment",
+                        "input": [200000, 0.04, 30],
+                        "expected": (954.83, 343739.01, 143739.01)
+                    }
+                ],
+                "hints": [
+                    "Convert annual rate to monthly by dividing by 12",
+                    "Convert years to months by multiplying by 12",
+                    "Use the mortgage payment formula exactly as given",
+                    "Handle the zero interest rate case separately"
+                ],
+                "xp_reward": 65
+            },
+            {
+                "title": "Unit Converter",
+                "description": "Convert between different units of measurement.",
+                "difficulty": "medium",
+                "starter_code": "def convert_units(value, from_unit, to_unit):\n    # Convert between metric units\n    # meters, centimeters, millimeters, kilometers\n    conversions = {\n        'meters': 1,\n        'centimeters': 0.01,\n        'millimeters': 0.001,\n        'kilometers': 1000\n    }\n    \n    # Convert to meters first, then to target unit\n    meters = # Convert input to meters\n    result = # Convert meters to target unit\n    return result",
+                "solution": "def convert_units(value, from_unit, to_unit):\n    conversions = {\n        'meters': 1,\n        'centimeters': 0.01,\n        'millimeters': 0.001,\n        'kilometers': 1000\n    }\n    \n    meters = value * conversions[from_unit]\n    result = meters / conversions[to_unit]\n    return result",
+                "test_cases": [
+                    {
+                        "function_name": "convert_units",
+                        "input": [1500, "centimeters", "meters"],
+                        "expected": 15.0
+                    },
+                    {
+                        "function_name": "convert_units",
+                        "input": [2.5, "kilometers", "meters"],
+                        "expected": 2500.0
+                    }
+                ],
+                "hints": [
+                    "Use the conversion factors to convert to meters first",
+                    "Then convert from meters to the target unit",
+                    "Multiply by the from_unit factor, divide by to_unit factor",
+                    "Use dictionary lookup for conversion factors"
                 ],
                 "xp_reward": 40
+            },
+            {
+                "title": "Fuel Efficiency Calculator",
+                "description": "Calculate miles per gallon and fuel costs for road trips.",
+                "difficulty": "medium",
+                "starter_code": "def fuel_efficiency(miles_driven, gallons_used, price_per_gallon, trip_distance=None):\n    # Calculate MPG and optionally estimate trip costs\n    mpg = # Miles per gallon\n    cost_per_mile = # Cost per mile driven\n    \n    if trip_distance:\n        estimated_gallons = # Gallons needed for trip\n        estimated_cost = # Total cost for trip\n        return mpg, cost_per_mile, estimated_gallons, estimated_cost\n    else:\n        return mpg, cost_per_mile",
+                "solution": "def fuel_efficiency(miles_driven, gallons_used, price_per_gallon, trip_distance=None):\n    mpg = miles_driven / gallons_used\n    cost_per_mile = price_per_gallon / mpg\n    \n    if trip_distance:\n        estimated_gallons = trip_distance / mpg\n        estimated_cost = estimated_gallons * price_per_gallon\n        return round(mpg, 2), round(cost_per_mile, 3), round(estimated_gallons, 2), round(estimated_cost, 2)\n    else:\n        return round(mpg, 2), round(cost_per_mile, 3)",
+                "test_cases": [
+                    {
+                        "function_name": "fuel_efficiency",
+                        "input": [300, 12, 3.50],
+                        "expected": (25.0, 0.14)
+                    },
+                    {
+                        "function_name": "fuel_efficiency",
+                        "input": [400, 16, 3.25, 800],
+                        "expected": (25.0, 0.13, 32.0, 104.0)
+                    }
+                ],
+                "hints": [
+                    "MPG = miles driven / gallons used",
+                    "Cost per mile = price per gallon / MPG",
+                    "For trip estimates, divide trip distance by MPG",
+                    "Multiply estimated gallons by price for total cost"
+                ],
+                "xp_reward": 50
+            },
+            {
+                "title": "Tax Calculator",
+                "description": "Calculate income tax based on progressive tax brackets.",
+                "difficulty": "hard",
+                "starter_code": "def calculate_tax(income):\n    # Progressive tax brackets: 0-10k: 10%, 10k-40k: 20%, 40k+: 30%\n    if income <= 10000:\n        tax = # Calculate tax for lowest bracket\n    elif income <= 40000:\n        tax = # Tax on first 10k + tax on remainder\n    else:\n        tax = # Tax on first 10k + tax on next 30k + tax on remainder\n    \n    after_tax_income = income - tax\n    effective_rate = (tax / income) * 100\n    return tax, after_tax_income, effective_rate",
+                "solution": "def calculate_tax(income):\n    if income <= 10000:\n        tax = income * 0.10\n    elif income <= 40000:\n        tax = 10000 * 0.10 + (income - 10000) * 0.20\n    else:\n        tax = 10000 * 0.10 + 30000 * 0.20 + (income - 40000) * 0.30\n    \n    after_tax_income = income - tax\n    effective_rate = (tax / income) * 100\n    return round(tax, 2), round(after_tax_income, 2), round(effective_rate, 2)",
+                "test_cases": [
+                    {
+                        "function_name": "calculate_tax",
+                        "input": [25000],
+                        "expected": (4000.0, 21000.0, 16.0)
+                    },
+                    {
+                        "function_name": "calculate_tax",
+                        "input": [60000],
+                        "expected": (13000.0, 47000.0, 21.67)
+                    }
+                ],
+                "hints": [
+                    "Calculate tax for each bracket separately",
+                    "For higher brackets, add tax from all lower brackets",
+                    "Effective rate = (total tax / income) * 100",
+                    "Use conditional statements for different income levels"
+                ],
+                "xp_reward": 60
             }
         ]
 
