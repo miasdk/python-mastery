@@ -6,8 +6,7 @@ import { Sidebar } from "@/components/sidebar";
 import { ProgressOverview } from "@/components/progress-overview";
 import { DashboardData } from "@/types";
 import { Link } from "wouter";
-import { BookOpen, Code, Trophy, TrendingUp, Star, Award } from "lucide-react";
-import { calculateLevel, getLevelBenefits, getNextLevelBenefits } from "@/lib/level-system";
+import { BookOpen, Code, Trophy, TrendingUp } from "lucide-react";
 
 // Helper function to extract clean description for dashboard preview
 function getCleanDescription(description: string): string {
@@ -89,20 +88,6 @@ export default function Dashboard() {
                 <div className="text-sm text-gray-500">Problems Solved</div>
                 <div className="text-lg font-bold text-green-600">{dashboardData.stats.problems_solved}/60</div>
               </div>
-              {(() => {
-                const levelInfo = calculateLevel(dashboardData.stats.total_xp);
-                return (
-                  <div className="text-right">
-                    <div className="text-sm text-gray-500 flex items-center">
-                      <Star className="w-3 h-3 mr-1" />
-                      Level {levelInfo.level} {levelInfo.title}
-                    </div>
-                    <div className="text-lg font-bold text-blue-600">
-                      {levelInfo.currentXP}/{levelInfo.xpForNextLevel} XP
-                    </div>
-                  </div>
-                );
-              })()}
               <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
                 <span className="text-white font-medium">
                   {dashboardData.user.username.charAt(0).toUpperCase()}
@@ -150,27 +135,18 @@ export default function Dashboard() {
                 </CardContent>
               </Card>
 
-              {(() => {
-                const levelInfo = calculateLevel(dashboardData.stats.total_xp);
-                return (
-                  <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium">Level Progress</CardTitle>
-                      <Star className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-2xl font-bold text-blue-600">Level {levelInfo.level}</div>
-                      <p className="text-xs text-muted-foreground">{levelInfo.title}</p>
-                      <div className="mt-2">
-                        <Progress value={levelInfo.progressPercentage} className="h-2" />
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {levelInfo.currentXP}/{levelInfo.xpForNextLevel} XP to next level
-                        </p>
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })()}
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">This Week</CardTitle>
+                  <Trophy className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-purple-600">
+                    {Math.min(dashboardData.stats.problems_solved, 7)}
+                  </div>
+                  <p className="text-xs text-muted-foreground">Problems completed</p>
+                </CardContent>
+              </Card>
             </div>
 
             {/* Continue Learning */}
