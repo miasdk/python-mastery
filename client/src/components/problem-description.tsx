@@ -129,7 +129,7 @@ export function ProblemDescription({ problem, onHintUsed }: ProblemDescriptionPr
                   const cleanLine = line.replace(/^\*\*/, '').replace(/\*\*$/, '').replace(/\*\*/g, '');
                   if (cleanLine.includes('Description') || cleanLine.includes('Example') || cleanLine.includes('Skills') || cleanLine.includes('Objective')) {
                     elements.push(
-                      <h3 key={i} className="font-medium text-slate-800 text-sm uppercase tracking-wide mb-2 mt-4 border-b border-slate-200 pb-1">
+                      <h3 key={i} className="font-medium text-slate-800 text-sm mb-2 mt-4 border-b border-slate-200 pb-1">
                         {cleanLine}
                       </h3>
                     );
