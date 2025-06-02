@@ -1,4 +1,5 @@
 import { pgTable, text, serial, integer, boolean, timestamp, jsonb } from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -79,6 +80,34 @@ export const achievements = pgTable("achievements", {
   icon: text("icon").notNull(),
   earnedAt: timestamp("earned_at").defaultNow().notNull(),
 });
+
+// Relations
+export const sectionsRelations = relations(sections, ({ many }) => ({
+  lessons: many(lessons),
+}));
+
+export const lessonsRelations = relations(lessons, ({ one, many }) => ({
+  section: one(sections, { fields: [lessons.sectionId], references: [sections.id] }),
+  problems: many(problems),
+}));
+
+export const problemsRelations = relations(problems, ({ one }) => ({
+  lesson: one(lessons, { fields: [problems.lessonId], references: [lessons.id] }),
+}));
+
+export const userProgressRelations = relations(userProgress, ({ one }) => ({
+  user: one(users, { fields: [userProgress.userId], references: [users.id] }),
+  problem: one(problems, { fields: [userProgress.problemId], references: [problems.id] }),
+}));
+
+export const achievementsRelations = relations(achievements, ({ one }) => ({
+  user: one(users, { fields: [achievements.userId], references: [users.id] }),
+}));
+
+export const codeSubmissionsRelations = relations(codeSubmissions, ({ one }) => ({
+  user: one(users, { fields: [codeSubmissions.userId], references: [users.id] }),
+  problem: one(problems, { fields: [codeSubmissions.problemId], references: [problems.id] }),
+}));
 
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({
