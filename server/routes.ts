@@ -299,14 +299,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
         
         outputMessage = `
-╭─ Console Output ─────────────────────────────────╮
-│ >>> ${functionName}()                                   │
-│ ${resultDisplay.padEnd(45)} │
-╰─────────────────────────────────────────────────╯
+┌─ Python Console ─────────────────────────────────┐
+│                                                  │
+│  >>> ${functionName}()                           │
+│  ${resultDisplay}                                │
+│                                                  │
+└──────────────────────────────────────────────────┘
 
-✅ Code executed successfully!
-
-Function runs without errors and produces valid output.`;
+    ✅ Execution Successful
+    
+    Your function ran without errors and returned:
+    ${resultDisplay}
+    
+    Ready to submit your solution!`;
       } else {
         const primaryError = syntaxErrors.length > 0 ? syntaxErrors[0] : 
                            contentErrors.length > 0 ? contentErrors[0] :
@@ -314,21 +319,25 @@ Function runs without errors and produces valid output.`;
                            !hasReturn ? 'Missing return statement' : 'Unknown error';
         
         outputMessage = `
-╭─ Console Output ─────────────────────────────────╮
-│ >>> Running your code...                        │
-│ Error: ${primaryError.substring(0, 40)}${primaryError.length > 40 ? '...' : ''} │
-╰─────────────────────────────────────────────────╯
+┌─ Python Console ─────────────────────────────────┐
+│                                                  │
+│  >>> Running your code...                       │
+│  Error: ${primaryError}                          │
+│                                                  │
+└──────────────────────────────────────────────────┘
 
-❌ Code execution failed
-
-${!hasFunction ? '❌ Function definition: Missing' : '✅ Function definition: Complete'}
-${!hasReturn ? '❌ Return statement: Missing' : '✅ Return statement: Present'}
-${!hasValidPythonSyntax ? '❌ Python syntax: Invalid' : '✅ Python syntax: Valid'}
-${!contentValidation ? '❌ Variable assignments: Invalid' : '✅ Variable assignments: Valid'}
-
-Error: ${primaryError}
-
-Fix the issues above and try again.`;
+    ❌ Execution Failed
+    
+    Code Analysis:
+    ${!hasFunction ? '    ❌ Function definition: Missing' : '    ✅ Function definition: Complete'}
+    ${!hasReturn ? '    ❌ Return statement: Missing' : '    ✅ Return statement: Present'}
+    ${!hasValidPythonSyntax ? '    ❌ Python syntax: Invalid' : '    ✅ Python syntax: Valid'}
+    ${!contentValidation ? '    ❌ Variable assignments: Invalid' : '    ✅ Variable assignments: Valid'}
+    
+    Issue Details:
+    ${primaryError}
+    
+    Fix the above issues and try again.`;
       }
 
       const result = {
@@ -467,37 +476,48 @@ Fix the issues above and try again.`;
         const resultDisplay = `('${actualValues[0]}', ${actualValues[1]}, '${actualValues[2]}', '${actualValues[3]}')`;
         
         outputMessage = `
-╭─ Console Output ─────────────────────────────────╮
-│ >>> ${functionName}()                                   │
-│ ${resultDisplay.padEnd(45)} │
-╰─────────────────────────────────────────────────╯
+┌─ Python Console ─────────────────────────────────┐
+│                                                  │
+│  >>> ${functionName}()                           │
+│  ${resultDisplay}                                │
+│                                                  │
+└──────────────────────────────────────────────────┘
 
-🎉 Success! All tests passed
-
-✅ Function definition: Complete
-✅ Return statement: Present  
-✅ Variable assignments: Valid
-✅ Execution time: ${executionTime}ms
-
-Ready for next challenge!`;
+    🎉 Problem Completed Successfully!
+    
+    Test Results:
+    ✅ Function definition: Complete
+    ✅ Return statement: Present  
+    ✅ Variable assignments: Valid
+    ✅ All test cases: Passed
+    
+    Execution time: ${executionTime}ms
+    
+    Great work! You can now:
+    • Navigate to the next problem
+    • Return to dashboard to see progress
+    • Continue your Python journey`;
       } else {
         outputMessage = `
-╭─ Console Output ─────────────────────────────────╮
-│ >>> Running your code...                        │
-│ Error: ${errorMessage?.substring(0, 40) || 'Function execution failed'}${errorMessage && errorMessage.length > 40 ? '...' : ''} │
-╰─────────────────────────────────────────────────╯
+┌─ Python Console ─────────────────────────────────┐
+│                                                  │
+│  >>> Running your code...                       │
+│  Error: ${errorMessage}                          │
+│                                                  │
+└──────────────────────────────────────────────────┘
 
-❌ Tests Failed
-
-${!hasFunction ? '❌ Function definition: Missing' : '✅ Function definition: Complete'}
-${!hasReturn ? '❌ Return statement: Missing' : '✅ Return statement: Present'}
-${!hasValidPythonSyntax ? '❌ Python syntax: Invalid' : '✅ Python syntax: Valid'}
-${!problemSpecificValidation ? '❌ Variable assignments: Invalid' : '✅ Variable assignments: Valid'}
-
-Error Details:
-${errorMessage}
-
-Fix the issues above and try again.`;
+    ❌ Submission Failed
+    
+    Code Analysis:
+    ${!hasFunction ? '    ❌ Function definition: Missing' : '    ✅ Function definition: Complete'}
+    ${!hasReturn ? '    ❌ Return statement: Missing' : '    ✅ Return statement: Present'}
+    ${!hasValidPythonSyntax ? '    ❌ Python syntax: Invalid' : '    ✅ Python syntax: Valid'}
+    ${!problemSpecificValidation ? '    ❌ Variable assignments: Invalid' : '    ✅ Variable assignments: Valid'}
+    
+    Issue Details:
+    ${errorMessage}
+    
+    Fix the above issues and try submitting again.`;
       }
       
       res.json({
