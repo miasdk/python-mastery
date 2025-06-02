@@ -43,7 +43,7 @@ export function Sidebar({ sections, currentProblemId, stats, achievements }: Sid
             {Math.round(stats.progress_percentage)}%
           </span>
         </div>
-        <Progress value={stats.progress_percentage} className="mb-4" />
+        <Progress value={stats.progress_percentage} className="mb-4 transition-all duration-700 ease-out" />
         
         <div className="grid grid-cols-2 gap-4">
           <div className="text-center">

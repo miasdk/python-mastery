@@ -160,9 +160,9 @@ export default function Problem() {
   if (problemLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
+        <div className="text-center animate-fade-in">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading problem...</p>
+          <p className="mt-4 text-gray-600 animate-pulse">Loading problem...</p>
         </div>
       </div>
     );
@@ -185,19 +185,21 @@ export default function Problem() {
   }
 
   return (
-    <div className="min-h-screen flex bg-gray-50">
+    <div className="min-h-screen flex bg-gray-50 animate-fade-in">
       {/* Sidebar */}
       {dashboardData && (
-        <Sidebar
-          sections={dashboardData.sections}
-          currentProblemId={problemId || undefined}
-          stats={dashboardData.stats}
-          achievements={dashboardData.recent_achievements}
-        />
+        <div className="animate-slide-in-right" style={{ animationDelay: '100ms' }}>
+          <Sidebar
+            sections={dashboardData.sections}
+            currentProblemId={problemId || undefined}
+            stats={dashboardData.stats}
+            achievements={dashboardData.recent_achievements}
+          />
+        </div>
       )}
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col animate-slide-up" style={{ animationDelay: '200ms' }}>
         {/* Top Navigation */}
         <div className="bg-white border-b border-gray-200 px-6 py-4">
           <div className="flex items-center justify-between">
