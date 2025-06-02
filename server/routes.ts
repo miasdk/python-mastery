@@ -525,7 +525,9 @@ Fix the issues above and try again.`;
         
         // Add practical usage example based on problem type
         let usageExample = '';
-        const problemTitle = problem.length > 0 ? problem[0].title.toLowerCase() : '';
+        const currentProblem = problem.length > 0 ? problem[0] : null;
+        const problemTitle = currentProblem ? currentProblem.title.toLowerCase() : '';
+        
         if (problemTitle.includes('business card')) {
           usageExample = `name, age, city, job = ${functionName}()\nprint(f"{name}, {age} years old from {city}")\nAlice Johnson, 25 years old from Boston`;
         } else if (problemTitle.includes('temperature')) {
