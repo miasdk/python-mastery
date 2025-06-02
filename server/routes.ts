@@ -1,9 +1,10 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
-import { db } from "drizzle-orm/node-postgres";
 import { drizzle } from "drizzle-orm/node-postgres";
-import { Pool } from "pg";
+import pkg from "pg";
+const { Pool } = pkg;
 import * as schema from "../shared/schema";
+import { eq, desc, asc } from "drizzle-orm";
 
 // Initialize database connection
 const pool = new Pool({
