@@ -83,7 +83,7 @@ class CurriculumGenerator:
         return [
             {
                 "title": "Personal Information Card",
-                "description": "Create a digital business card by storing personal information in variables.",
+                "description": "**Personal Information Card**\n**Easy - Variables & Data Types**\n\n**What You're Building:**\nCreate a digital business card system for a networking app. Store essential contact information that appears on your professional profile.\n\n**Your Task:**\n- Store your name: \"John Smith\"\n- Store your age: 30\n- Store your city: \"New York\"\n- Store your profession: \"Engineer\"\n- Return all values as a tuple\n\n**Skills Practiced:** Variable Assignment • String Values • Number Values\n\n**Example:**\n```python\nname, age, city, job = personal_info()\nprint(f\"{name}, {age} - {job} in {city}\")  # John Smith, 30 - Engineer in New York\n```",
                 "difficulty": "easy",
                 "starter_code": "def create_business_card():\n    # Create variables for your personal information\n    name = # Your name here\n    age = # Your age here\n    city = # Your city here\n    profession = # Your profession here\n    return name, age, city, profession",
                 "solution": "def create_business_card():\n    name = \"Alice Johnson\"\n    age = 28\n    city = \"San Francisco\"\n    profession = \"Software Developer\"\n    return name, age, city, profession",
@@ -104,7 +104,7 @@ class CurriculumGenerator:
             },
             {
                 "title": "Temperature Converter Setup",
-                "description": "Store temperature values in different units for conversion calculations.",
+                "description": "**Temperature Converter Setup**\n**Easy - Variables & Data Types**\n\n**What You're Building:**\nCreate a weather app component that stores temperature data. Prepare the foundation for a temperature conversion system.\n\n**Your Task:**\n- Store celsius temperature: 25\n- Store fahrenheit temperature: 77\n- Store location: \"Miami\"\n- Store season: \"Summer\"\n- Return all values as a tuple\n\n**Skills Practiced:** Variable Assignment • Number Values • String Values\n\n**Example:**\n```python\nc, f, location, season = temperature_data()\nprint(f\"{location}: {c}°C ({f}°F) in {season}\")  # Miami: 25°C (77°F) in Summer\n```",
                 "difficulty": "easy",
                 "starter_code": "def temperature_data():\n    # Store temperature values\n    celsius = 25.0\n    # Calculate Fahrenheit (F = C * 9/5 + 32)\n    fahrenheit = # Your calculation here\n    is_freezing = # True if celsius is below 0\n    return celsius, fahrenheit, is_freezing",
                 "solution": "def temperature_data():\n    celsius = 25.0\n    fahrenheit = celsius * 9/5 + 32\n    is_freezing = celsius < 0\n    return celsius, fahrenheit, is_freezing",
@@ -124,7 +124,7 @@ class CurriculumGenerator:
             },
             {
                 "title": "Shopping Item Details",
-                "description": "Store product information for an online store inventory system.",
+                "description": "**Shopping Item Details**\n**Easy - Variables & Data Types**\n\n**What You're Building:**\nCreate a product data system for an online electronics store. Store essential product information that customers need to make purchasing decisions.\n\n**Your Task:**\n- Store product name: \"Wireless Headphones\"\n- Store price: 89.99\n- Store stock status: True\n- Store quantity: 15\n- Return all values as a tuple\n\n**Skills Practiced:** Variable Assignment • Data Types • Tuple Returns\n\n**Example:**\n```python\nname, price, stock, qty = product_info()\nprint(f\"{name}: ${price}\")  # Wireless Headphones: $89.99\n```",
                 "difficulty": "easy",
                 "starter_code": "def product_info():\n    # Store product details\n    product_name = \"Wireless Headphones\"\n    price = # Price as float\n    in_stock = # Boolean value\n    quantity = # Integer value\n    return product_name, price, in_stock, quantity",
                 "solution": "def product_info():\n    product_name = \"Wireless Headphones\"\n    price = 89.99\n    in_stock = True\n    quantity = 15\n    return product_name, price, in_stock, quantity",
@@ -145,7 +145,7 @@ class CurriculumGenerator:
             },
             {
                 "title": "Student Grade Calculator",
-                "description": "Calculate a student's final grade and determine pass/fail status.",
+                "description": "**Student Grade Calculator**\n**Medium - Arithmetic Operations**\n\n**What You're Building:**\nCreate a grade calculation system for a university portal. Calculate weighted final grades to determine if students pass their courses.\n\n**Your Task:**\n- Calculate weighted average: midterm 30%, final 50%, homework 20%\n- Determine if grade >= 60 (passing)\n- Return final grade and pass status\n\n**Skills Practiced:** Arithmetic Operations • Weighted Calculations • Boolean Logic\n\n**Example:**\n```python\ngrade, passed = calculate_final_grade(85, 78, 92)\nprint(f\"Final grade: {grade}% - {'PASS' if passed else 'FAIL'}\")  # Final grade: 82.1% - PASS\n```",
                 "difficulty": "medium",
                 "starter_code": "def calculate_final_grade(midterm, final_exam, homework):\n    # Calculate weighted average: midterm 30%, final 50%, homework 20%\n    final_grade = # Your calculation here\n    passed = # True if grade >= 60\n    return final_grade, passed",
                 "solution": "def calculate_final_grade(midterm, final_exam, homework):\n    final_grade = midterm * 0.3 + final_exam * 0.5 + homework * 0.2\n    passed = final_grade >= 60\n    return final_grade, passed",
@@ -171,7 +171,7 @@ class CurriculumGenerator:
             },
             {
                 "title": "Data Type Detective",
-                "description": "Convert user input strings to appropriate data types for processing.",
+                "description": "**Data Type Detective**\n**Easy - Type Conversion**\n\n**What You're Building:**\nCreate a user registration system that processes form input. Convert text inputs from web forms into the correct data types for database storage.\n\n**Your Task:**\n- Convert age string to integer\n- Convert height string to float\n- Convert student status string to boolean (\"true\" -> True)\n- Return converted values as tuple\n\n**Skills Practiced:** Type Conversion • String Methods • Boolean Logic\n\n**Example:**\n```python\nage, height, student = convert_user_input(\"25\", \"5.8\", \"true\")\nprint(f\"Age: {age}, Height: {height}ft, Student: {student}\")  # Age: 25, Height: 5.8ft, Student: True\n```",
                 "difficulty": "easy",
                 "starter_code": "def convert_user_input(age_str, height_str, is_student_str):\n    # Convert strings to appropriate types\n    age = # Convert to integer\n    height = # Convert to float\n    is_student = # Convert to boolean (\"true\" -> True, \"false\" -> False)\n    return age, height, is_student",
                 "solution": "def convert_user_input(age_str, height_str, is_student_str):\n    age = int(age_str)\n    height = float(height_str)\n    is_student = is_student_str.lower() == \"true\"\n    return age, height, is_student",
@@ -197,7 +197,7 @@ class CurriculumGenerator:
             },
             {
                 "title": "Bank Account Balance",
-                "description": "Track bank account information and calculate interest earnings.",
+                "description": "**Bank Account Balance**\n**Medium - Financial Calculations**\n\n**What You're Building:**\nCreate a savings account tracker for a banking app. Calculate how much money grows over time with regular deposits and interest.\n\n**Your Task:**\n- Calculate total deposits over time period\n- Add deposits to initial balance\n- Calculate interest earned on final balance\n- Return deposits, interest, and final balance\n\n**Skills Practiced:** Arithmetic Operations • Financial Math • Multi-step Calculations\n\n**Example:**\n```python\ndeposits, interest, final = account_summary(1000, 200, 0.05, 12)\nprint(f\"Final balance: ${final} (earned ${interest} interest)\")  # Final balance: $3570.0 (earned $170.0 interest)\n```",
                 "difficulty": "medium",
                 "starter_code": "def account_summary(initial_balance, monthly_deposit, interest_rate, months):\n    # Calculate final balance after deposits and interest\n    total_deposits = # Calculate total deposits\n    balance_before_interest = # Add deposits to initial balance\n    interest_earned = # Calculate interest on final balance\n    final_balance = # Add interest to balance\n    return total_deposits, interest_earned, final_balance",
                 "solution": "def account_summary(initial_balance, monthly_deposit, interest_rate, months):\n    total_deposits = monthly_deposit * months\n    balance_before_interest = initial_balance + total_deposits\n    interest_earned = balance_before_interest * interest_rate\n    final_balance = balance_before_interest + interest_earned\n    return total_deposits, interest_earned, final_balance",
@@ -218,7 +218,7 @@ class CurriculumGenerator:
             },
             {
                 "title": "Recipe Scaler",
-                "description": "Scale recipe ingredients based on number of servings needed.",
+                "description": "**Recipe Scaler**\n**Medium - Proportional Calculations**\n\n**What You're Building:**\nCreate a recipe scaling feature for a cooking app. Help users adjust ingredient quantities when cooking for different numbers of people.\n\n**Your Task:**\n- Calculate scaling factor (desired/original servings)\n- Scale ingredient amount by the factor\n- Return scale factor and new amount\n\n**Skills Practiced:** Division • Multiplication • Proportional Math\n\n**Example:**\n```python\nfactor, new_amount = scale_recipe(4, 6, 2.0)\nprint(f\"Scale by {factor}x: {new_amount} cups\")  # Scale by 1.5x: 3.0 cups\n```",
                 "difficulty": "medium",
                 "starter_code": "def scale_recipe(original_servings, desired_servings, flour_cups, sugar_cups, eggs):\n    # Calculate scaling factor and new ingredient amounts\n    scale_factor = # Calculate how much to scale\n    new_flour = # Scale flour amount\n    new_sugar = # Scale sugar amount\n    new_eggs = # Scale eggs (round to nearest whole number)\n    return scale_factor, new_flour, new_sugar, new_eggs",
                 "solution": "def scale_recipe(original_servings, desired_servings, flour_cups, sugar_cups, eggs):\n    scale_factor = desired_servings / original_servings\n    new_flour = flour_cups * scale_factor\n    new_sugar = sugar_cups * scale_factor\n    new_eggs = round(eggs * scale_factor)\n    return scale_factor, new_flour, new_sugar, new_eggs",

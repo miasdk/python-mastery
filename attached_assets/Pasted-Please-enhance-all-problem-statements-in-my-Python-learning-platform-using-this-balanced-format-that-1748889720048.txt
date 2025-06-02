@@ -1,0 +1,58 @@
+Please enhance all problem statements in my Python learning platform using this balanced format that is professional but concise:
+
+REQUIRED FORMAT FOR EVERY PROBLEM:
+
+**[Problem Title]**
+**[Difficulty] - [Main Python Concept]**
+
+**What You're Building:**
+[1-2 sentences maximum: realistic scenario + clear purpose]
+
+**Your Task:**
+- [Bullet point 1: specific requirement]
+- [Bullet point 2: specific requirement] 
+- [Bullet point 3: specific requirement]
+- [Return statement requirement]
+
+**Skills Practiced:** [Concept 1] • [Concept 2] • [Concept 3]
+
+**Example:**
+```python
+[2-3 lines showing function usage and expected output]
+EXAMPLE TRANSFORMATION:
+BEFORE (too brief):
+Shopping Item Details
+Easy
+Store product information for an online store inventory system.
+AFTER (sweet spot):
+Shopping Item Details
+Easy - Variables & Data Types
+What You're Building:
+Create a product data system for an online electronics store. Store essential product information that customers need to make purchasing decisions.
+Your Task:
+
+Store product name: "Gaming Laptop Pro"
+Store price: 1299.99
+Store stock quantity: 15
+Store sale status: True
+Return all values as a tuple
+
+Skills Practiced: Variable Assignment • Data Types • Tuple Returns
+Example:
+pythonname, price, stock, on_sale = product_details()
+print(f"{name}: ${price}")  # Gaming Laptop Pro: $1299.99
+QUALITY GUIDELINES:
+✅ Keep "What You're Building" to 1-2 sentences maximum
+✅ Use bullet points for clear, scannable task requirements
+✅ Show practical applications (online stores, weather apps, games, banking)
+✅ Include simple code example showing expected result
+✅ List 2-3 key skills being practiced in dot-separated format
+✅ Professional tone but concise and respect student's time
+✅ Total reading time: 15-30 seconds maximum
+AVOID:
+❌ Long explanations about real-world relevance
+❌ Multiple paragraphs of context
+❌ Academic-style verbose descriptions
+❌ Multiple code examples
+❌ Overwhelming detail
+Apply this exact format to ALL problems across all sections (Python Basics, Control Flow, Functions, Data Structures) to create consistent, professional, scannable problem statements that clearly communicate value without overwhelming students.
