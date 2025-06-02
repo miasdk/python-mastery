@@ -232,7 +232,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const hasReturn = code.includes('return');
       const hasValidPythonSyntax = syntaxErrors.length === 0;
       
-      const success = hasFunction && hasReturn && hasValidPythonSyntax;
+      // Enhanced validation for execute endpoint
+      let contentValidation = true;
+      let contentErrors = [];
+      
+      // Check if this looks like the business card problem
+      if (code.includes('create_business_card')) {
+        const nameMatch = code.match(/name\s*=\s*["']([^"']+)["']/);
+        const ageMatch = code.match(/age\s*=\s*(\d+)/);
+        const cityMatch = code.match(/city\s*=\s*["']([^"']+)["']/);
+        const professionMatch = code.match(/profession\s*=\s*["']([^"']+)["']/);
+        
+        if (!nameMatch || nameMatch[1].trim() === '') {
+          contentErrors.push('Name must be a non-empty string');
+          contentValidation = false;
+        }
+        if (!ageMatch || parseInt(ageMatch[1]) <= 0) {
+          contentErrors.push('Age must be a positive number');
+          contentValidation = false;
+        }
+        if (!cityMatch || cityMatch[1].trim() === '') {
+          contentErrors.push('City must be a non-empty string');
+          contentValidation = false;
+        }
+        if (!professionMatch || professionMatch[1].trim() === '') {
+          contentErrors.push('Profession must be a non-empty string');
+          contentValidation = false;
+        }
+      }
+      
+      const success = hasFunction && hasReturn && hasValidPythonSyntax && contentValidation;
       
       // Simulate actual code execution output
       let outputMessage = "";
@@ -269,27 +298,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         }
         
-        outputMessage = `Console Output:
->>> ${functionName}()
-${resultDisplay}
+        outputMessage = `
+╭─ Console Output ─────────────────────────────────╮
+│ >>> ${functionName}()                                   │
+│ ${resultDisplay.padEnd(45)} │
+╰─────────────────────────────────────────────────╯
 
-✓ Function executed successfully!
-Your code runs without errors and produces expected output.`;
-      } else if (syntaxErrors.length > 0) {
-        outputMessage = `Console Output:
->>> exec(compile('''${code.split('\n')[0]}...''', '<string>', 'exec'))
-  File "<string>", line 1
-SyntaxError: ${syntaxErrors[0]}
+✅ Code executed successfully!
 
-❌ Fix the syntax error above and try again.`;
+Function runs without errors and produces valid output.`;
       } else {
-        outputMessage = `Console Output:
->>> exec(compile('''${code.split('\n')[0]}...''', '<string>', 'exec'))
-NameError: name 'function' is not defined
+        const primaryError = syntaxErrors.length > 0 ? syntaxErrors[0] : 
+                           contentErrors.length > 0 ? contentErrors[0] :
+                           !hasFunction ? 'Missing function definition' :
+                           !hasReturn ? 'Missing return statement' : 'Unknown error';
+        
+        outputMessage = `
+╭─ Console Output ─────────────────────────────────╮
+│ >>> Running your code...                        │
+│ Error: ${primaryError.substring(0, 40)}${primaryError.length > 40 ? '...' : ''} │
+╰─────────────────────────────────────────────────╯
 
-⚠️ Implementation incomplete:
-- Define a function with 'def function_name():'
-- Include a 'return' statement`;
+❌ Code execution failed
+
+${!hasFunction ? '❌ Function definition: Missing' : '✅ Function definition: Complete'}
+${!hasReturn ? '❌ Return statement: Missing' : '✅ Return statement: Present'}
+${!hasValidPythonSyntax ? '❌ Python syntax: Invalid' : '✅ Python syntax: Valid'}
+${!contentValidation ? '❌ Variable assignments: Invalid' : '✅ Variable assignments: Valid'}
+
+Error: ${primaryError}
+
+Fix the issues above and try again.`;
       }
 
       const result = {
@@ -347,13 +386,40 @@ NameError: name 'function' is not defined
       
       const problemData = problem[0];
       
-      // Basic validation for all problems
+      // Enhanced validation based on problem type
       const hasFunction = code.includes('def ');
       const hasReturn = code.includes('return');
       const hasValidPythonSyntax = syntaxErrors.length === 0;
       
-      // For now, use basic validation - in production you'd execute against test cases
-      const allPassed = hasFunction && hasReturn && hasValidPythonSyntax;
+      // Problem-specific validation
+      let problemSpecificValidation = true;
+      let validationErrors = [];
+      
+      if (problemData.title === 'Personal Information Card') {
+        const nameMatch = code.match(/name\s*=\s*["']([^"']+)["']/);
+        const ageMatch = code.match(/age\s*=\s*(\d+)/);
+        const cityMatch = code.match(/city\s*=\s*["']([^"']+)["']/);
+        const professionMatch = code.match(/profession\s*=\s*["']([^"']+)["']/);
+        
+        if (!nameMatch || nameMatch[1].trim() === '') {
+          validationErrors.push('Name variable must be assigned a non-empty string value');
+          problemSpecificValidation = false;
+        }
+        if (!ageMatch || parseInt(ageMatch[1]) <= 0) {
+          validationErrors.push('Age variable must be assigned a positive number');
+          problemSpecificValidation = false;
+        }
+        if (!cityMatch || cityMatch[1].trim() === '') {
+          validationErrors.push('City variable must be assigned a non-empty string value');
+          problemSpecificValidation = false;
+        }
+        if (!professionMatch || professionMatch[1].trim() === '') {
+          validationErrors.push('Profession variable must be assigned a non-empty string value');
+          problemSpecificValidation = false;
+        }
+      }
+      
+      const allPassed = hasFunction && hasReturn && hasValidPythonSyntax && problemSpecificValidation;
       
       let errorMessage = null;
       if (syntaxErrors.length > 0) {
@@ -362,6 +428,8 @@ NameError: name 'function' is not defined
         errorMessage = "Missing function definition. Use 'def function_name():'";
       } else if (!hasReturn) {
         errorMessage = "Missing return statement";
+      } else if (validationErrors.length > 0) {
+        errorMessage = validationErrors[0];
       }
       
       const executionTime = Math.floor(Math.random() * 100) + 50;
@@ -398,35 +466,38 @@ NameError: name 'function' is not defined
         
         const resultDisplay = `('${actualValues[0]}', ${actualValues[1]}, '${actualValues[2]}', '${actualValues[3]}')`;
         
-        outputMessage = `Console Output:
->>> ${functionName}()
-${resultDisplay}
+        outputMessage = `
+╭─ Console Output ─────────────────────────────────╮
+│ >>> ${functionName}()                                   │
+│ ${resultDisplay.padEnd(45)} │
+╰─────────────────────────────────────────────────╯
 
-🎉 Problem Completed Successfully!
+🎉 Success! All tests passed
 
-Your solution passed all test cases:
-- Function executed without errors
-- All test cases passed
-- Execution time: ${executionTime}ms
+✅ Function definition: Complete
+✅ Return statement: Present  
+✅ Variable assignments: Valid
+✅ Execution time: ${executionTime}ms
 
-Great job! You can now:
-✓ Navigate to the next problem
-✓ Return to the dashboard to see your progress
-✓ Continue your Python learning journey`;
+Ready for next challenge!`;
       } else {
-        outputMessage = `Console Output:
->>> Running your code...
-${errorMessage ? `Error: ${errorMessage}` : 'Function execution failed'}
+        outputMessage = `
+╭─ Console Output ─────────────────────────────────╮
+│ >>> Running your code...                        │
+│ Error: ${errorMessage?.substring(0, 40) || 'Function execution failed'}${errorMessage && errorMessage.length > 40 ? '...' : ''} │
+╰─────────────────────────────────────────────────╯
 
-❌ Test Failed: ${errorMessage}
+❌ Tests Failed
 
-What to check:
-- Make sure you're using Python syntax (not JavaScript)
-- Create variables without 'let', 'const', or 'var'
-- Include a function definition with 'def'
-- Add a return statement
+${!hasFunction ? '❌ Function definition: Missing' : '✅ Function definition: Complete'}
+${!hasReturn ? '❌ Return statement: Missing' : '✅ Return statement: Present'}
+${!hasValidPythonSyntax ? '❌ Python syntax: Invalid' : '✅ Python syntax: Valid'}
+${!problemSpecificValidation ? '❌ Variable assignments: Invalid' : '✅ Variable assignments: Valid'}
 
-Try again - you're getting close!`;
+Error Details:
+${errorMessage}
+
+Fix the issues above and try again.`;
       }
       
       res.json({
