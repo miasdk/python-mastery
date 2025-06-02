@@ -337,7 +337,7 @@ class CurriculumGenerator:
             },
             {
                 "title": "Tip Calculator",
-                "description": "Calculate tip amount and total bill for restaurant visits.",
+                "description": "**Tip Calculator**\n**Easy - Percentage Calculations**\n\n**What You're Building:**\nCreate a bill splitting feature for a restaurant app. Calculate tips and split costs among friends dining together.\n\n**Your Task:**\n- Calculate tip amount from bill and percentage\n- Calculate total bill including tip\n- Calculate amount per person\n- Return tip, total, and per-person amounts\n\n**Skills Practiced:** Percentage Math • Division • Rounding\n\n**Example:**\n```python\ntip, total, each = calculate_tip(100.00, 18, 4)\nprint(f\"Each person pays: ${each}\")  # Each person pays: $29.5\n```",
                 "difficulty": "easy",
                 "starter_code": "def calculate_tip(bill_amount, tip_percentage, num_people):\n    # Calculate tip amount and total per person\n    tip_amount = # Calculate tip\n    total_bill = # Add tip to bill\n    per_person = # Divide by number of people\n    return tip_amount, total_bill, per_person",
                 "solution": "def calculate_tip(bill_amount, tip_percentage, num_people):\n    tip_amount = bill_amount * (tip_percentage / 100)\n    total_bill = bill_amount + tip_amount\n    per_person = total_bill / num_people\n    return round(tip_amount, 2), round(total_bill, 2), round(per_person, 2)",
@@ -363,7 +363,7 @@ class CurriculumGenerator:
             },
             {
                 "title": "Compound Interest Calculator",
-                "description": "Calculate compound interest for savings and investments.",
+                "description": "**Compound Interest Calculator**\n**Medium - Advanced Math Operations**\n\n**What You're Building:**\nCreate an investment tracking feature for a banking app. Calculate how savings grow over time with compound interest.\n\n**Your Task:**\n- Apply compound interest formula: A = P(1 + r/n)^(nt)\n- Calculate final amount after compound growth\n- Calculate total interest earned\n- Return final amount and interest earned\n\n**Skills Practiced:** Exponentiation • Financial Formulas • Complex Calculations\n\n**Example:**\n```python\namount, interest = compound_interest(1000, 0.05, 4, 10)\nprint(f\"${amount} total (${interest} earned)\")  # $1643.62 total ($643.62 earned)\n```",
                 "difficulty": "medium",
                 "starter_code": "def compound_interest(principal, annual_rate, times_compounded, years):\n    # A = P(1 + r/n)^(nt)\n    # A = final amount, P = principal, r = annual rate, n = times compounded per year, t = years\n    amount = # Your calculation here\n    interest_earned = # Amount - principal\n    return amount, interest_earned",
                 "solution": "def compound_interest(principal, annual_rate, times_compounded, years):\n    amount = principal * (1 + annual_rate / times_compounded) ** (times_compounded * years)\n    interest_earned = amount - principal\n    return round(amount, 2), round(interest_earned, 2)",
@@ -389,27 +389,27 @@ class CurriculumGenerator:
             },
             {
                 "title": "Distance and Speed Calculator",
-                "description": "Calculate distance, speed, or time using the distance formula.",
+                "description": "**Distance and Speed Calculator**\n**Medium - Formula Applications**\n\n**What You're Building:**\nCreate a travel planning tool for a navigation app. Calculate missing values for trips using distance, speed, and time relationships.\n\n**Your Task:**\n- Apply distance = speed × time formula\n- Calculate missing value when given two others\n- Convert time to minutes using division\n- Return hours and remaining minutes\n\n**Skills Practiced:** Formula Application • Division • Modulo Operations\n\n**Example:**\n```python\nhours, minutes = convert_minutes(150)\nprint(f\"{hours} hours and {minutes} minutes\")  # 2 hours and 30 minutes\n```",
                 "difficulty": "medium",
-                "starter_code": "def calculate_motion(distance=None, speed=None, time=None):\n    # Given two values, calculate the third using: distance = speed * time\n    if distance is None:\n        result = # Calculate distance\n        return f\"Distance: {result} units\"\n    elif speed is None:\n        result = # Calculate speed\n        return f\"Speed: {result} units/time\"\n    elif time is None:\n        result = # Calculate time\n        return f\"Time: {result} time units\"",
-                "solution": "def calculate_motion(distance=None, speed=None, time=None):\n    if distance is None:\n        result = speed * time\n        return f\"Distance: {result} units\"\n    elif speed is None:\n        result = distance / time\n        return f\"Speed: {result} units/time\"\n    elif time is None:\n        result = distance / speed\n        return f\"Time: {result} time units\"",
+                "starter_code": "def convert_minutes(total_minutes):\n    # Convert total minutes to hours and remaining minutes\n    hours = # Divide by 60 to get whole hours\n    remaining_minutes = # Use modulo to get leftover minutes\n    return hours, remaining_minutes",
+                "solution": "def convert_minutes(total_minutes):\n    hours = total_minutes // 60\n    remaining_minutes = total_minutes % 60\n    return hours, remaining_minutes",
                 "test_cases": [
                     {
-                        "function_name": "calculate_motion",
-                        "input": [None, 60, 2],
-                        "expected": "Distance: 120 units"
+                        "function_name": "convert_minutes",
+                        "input": [150],
+                        "expected": (2, 30)
                     },
                     {
-                        "function_name": "calculate_motion",
-                        "input": [300, None, 5],
-                        "expected": "Speed: 60.0 units/time"
+                        "function_name": "convert_minutes",
+                        "input": [90],
+                        "expected": (1, 30)
                     }
                 ],
                 "hints": [
-                    "Use distance = speed * time formula",
-                    "Rearrange formula based on which value is None",
-                    "Return formatted string as shown in examples",
-                    "Handle division carefully"
+                    "Use integer division (//) to get whole hours",
+                    "Use modulo operator (%) to get remaining minutes",
+                    "60 minutes = 1 hour",
+                    "Return both values as a tuple"
                 ],
                 "xp_reward": 45
             },
@@ -517,21 +517,21 @@ class CurriculumGenerator:
     def _get_string_problems(self) -> List[Dict[str, Any]]:
         return [
             {
-                "title": "String Length",
-                "description": "Find the length of a string.",
+                "title": "Text Processor",
+                "description": "**Text Processor**\n**Easy - String Methods**\n\n**What You're Building:**\nCreate a text analysis tool for a content management system. Process user input to display character counts and formatted versions.\n\n**Your Task:**\n- Calculate text length using len()\n- Convert to uppercase using .upper()\n- Convert to lowercase using .lower()\n- Return length, uppercase, and lowercase versions\n\n**Skills Practiced:** String Methods • Built-in Functions • Text Processing\n\n**Example:**\n```python\nlength, upper, lower = text_info(\"Hello World\")\nprint(f\"{length} chars: '{upper}' / '{lower}'\")  # 11 chars: 'HELLO WORLD' / 'hello world'\n```",
                 "difficulty": "easy",
-                "starter_code": "def string_length(text):\n    # Return the length of the string\n    # Your code here\n    pass",
-                "solution": "def string_length(text):\n    return len(text)",
+                "starter_code": "def text_info(text):\n    # Analyze text and return statistics\n    length = # Get text length\n    upper_text = # Convert to uppercase\n    lower_text = # Convert to lowercase\n    return length, upper_text, lower_text",
+                "solution": "def text_info(text):\n    length = len(text)\n    upper_text = text.upper()\n    lower_text = text.lower()\n    return length, upper_text, lower_text",
                 "test_cases": [
                     {
-                        "function_name": "string_length",
-                        "input": "hello",
-                        "expected": 5
+                        "function_name": "text_info",
+                        "input": ["Hello World"],
+                        "expected": (11, "HELLO WORLD", "hello world")
                     },
                     {
-                        "function_name": "string_length",
-                        "input": "Python",
-                        "expected": 6
+                        "function_name": "text_info",
+                        "input": ["Python"],
+                        "expected": (6, "PYTHON", "python")
                     }
                 ],
                 "hints": [
