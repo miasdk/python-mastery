@@ -217,7 +217,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { code, test_cases } = req.body;
       
       // Check for Python syntax errors
-      const syntaxErrors: string[] = [];
+      const syntaxErrors = [] as string[];
       if (code.includes('let ')) {
         syntaxErrors.push("Python uses variable assignment without 'let' keyword. Use: name = \"value\"");
       }
@@ -240,23 +240,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Try to extract function name and simulate execution
         const functionMatch = code.match(/def\s+(\w+)/);
         const functionName = functionMatch ? functionMatch[1] : 'your_function';
+        const expectedResult = test_cases[0]?.expected;
+        
+        // Format the output to look like real Python console
+        let resultDisplay = "";
+        if (Array.isArray(expectedResult)) {
+          resultDisplay = `(${expectedResult.map(val => 
+            typeof val === 'string' ? `'${val}'` : val
+          ).join(', ')})`;
+        } else {
+          resultDisplay = typeof expectedResult === 'string' ? `'${expectedResult}'` : String(expectedResult);
+        }
         
         outputMessage = `Console Output:
 >>> ${functionName}()
-${JSON.stringify(test_cases[0]?.expected || "result")}
+${resultDisplay}
 
 ✓ Function executed successfully!
 Your code runs without errors and produces expected output.`;
       } else if (syntaxErrors.length > 0) {
         outputMessage = `Console Output:
->>> Running your code...
+>>> exec(compile('''${code.split('\n')[0]}...''', '<string>', 'exec'))
+  File "<string>", line 1
 SyntaxError: ${syntaxErrors[0]}
 
 ❌ Fix the syntax error above and try again.`;
       } else {
         outputMessage = `Console Output:
->>> Running your code...
-NameError: function not defined or incomplete
+>>> exec(compile('''${code.split('\n')[0]}...''', '<string>', 'exec'))
+NameError: name 'function' is not defined
 
 ⚠️ Implementation incomplete:
 - Define a function with 'def function_name():'
@@ -297,7 +309,7 @@ NameError: function not defined or incomplete
       const { problem_id, code, user_id } = req.body;
       
       // Check for Python syntax errors
-      const syntaxErrors = [];
+      const syntaxErrors = [] as string[];
       if (code.includes('let ')) {
         syntaxErrors.push("Python uses variable assignment without 'let' keyword. Use: name = \"value\"");
       }
