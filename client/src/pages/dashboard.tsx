@@ -17,24 +17,12 @@ function getCleanDescription(description: string): string {
       for (let j = i + 1; j < lines.length; j++) {
         const cleanLine = lines[j].trim();
         if (cleanLine && !cleanLine.startsWith('**') && !cleanLine.startsWith('-')) {
-          return cleanLine.length > 80 ? cleanLine.slice(0, 80) + '...' : cleanLine;
+          // Extract just the first sentence
+          const firstSentence = cleanLine.split('.')[0];
+          return firstSentence.length > 60 ? firstSentence.slice(0, 60) + '...' : firstSentence + '.';
         }
       }
     }
-  }
-  
-  // Fallback: find first meaningful line that's not formatting
-  const meaningfulLine = lines.find(line => {
-    const clean = line.trim();
-    return clean && 
-           !clean.startsWith('**') && 
-           !clean.startsWith('-') && 
-           !clean.startsWith('```') &&
-           clean.length > 10;
-  });
-  
-  if (meaningfulLine) {
-    return meaningfulLine.length > 80 ? meaningfulLine.slice(0, 80) + '...' : meaningfulLine;
   }
   
   return "Continue with your next coding challenge";
