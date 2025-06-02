@@ -571,6 +571,176 @@ class CurriculumGenerator:
                     "Add space between first and last name"
                 ],
                 "xp_reward": 35
+            },
+            {
+                "title": "Grade Calculator",
+                "description": "**Grade Calculator**\n**Easy - Basic Conditionals**\n\n**What You're Building:**\nCreate a student grade system for a school management platform.\n\n**Your Task:**\n- Check if score is 90+ (A), 80+ (B), 70+ (C), 60+ (D), or below (F)\n- Return letter grade based on numeric score\n- Handle edge cases for perfect scores\n\n**Skills Practiced:** If/Elif Statements • Comparison Operators • Grade Logic\n\n**Example:**\n```python\ngrade = calculate_grade(85)\nprint(f\"Grade: {grade}\")  # Grade: B\n```",
+                "difficulty": "easy",
+                "starter_code": "def calculate_grade(score):\n    # Determine letter grade from numeric score\n    if score >= 90:\n        return # Grade A\n    elif score >= 80:\n        return # Grade B\n    # Add remaining conditions\n    return # Default grade",
+                "solution": "def calculate_grade(score):\n    if score >= 90:\n        return \"A\"\n    elif score >= 80:\n        return \"B\"\n    elif score >= 70:\n        return \"C\"\n    elif score >= 60:\n        return \"D\"\n    else:\n        return \"F\"",
+                "test_cases": [
+                    {
+                        "function_name": "calculate_grade",
+                        "input": [85],
+                        "expected": "B"
+                    },
+                    {
+                        "function_name": "calculate_grade",
+                        "input": [92],
+                        "expected": "A"
+                    },
+                    {
+                        "function_name": "calculate_grade",
+                        "input": [55],
+                        "expected": "F"
+                    }
+                ],
+                "hints": [
+                    "Use if/elif/else statements",
+                    "Check highest grade first (90+)",
+                    "Use >= for grade boundaries",
+                    "Return string letters: 'A', 'B', 'C', 'D', 'F'"
+                ],
+                "xp_reward": 30
+            },
+            {
+                "title": "Shopping Discount Calculator",
+                "description": "**Shopping Discount Calculator**\n**Medium - Complex Conditionals**\n\n**What You're Building:**\nCreate a discount system for an e-commerce platform with tiered pricing.\n\n**Your Task:**\n- Apply 20% discount for orders $100+\n- Apply 15% discount for orders $50-$99.99\n- Apply 10% discount for orders $25-$49.99\n- No discount for orders under $25\n- Return final price and discount amount\n\n**Skills Practiced:** Nested Conditionals • Mathematical Calculations • E-commerce Logic\n\n**Example:**\n```python\nfinal_price, discount = apply_discount(120.00)\nprint(f\"Final: ${final_price:.2f} (saved ${discount:.2f})\")  # Final: $96.00 (saved $24.00)\n```",
+                "difficulty": "medium",
+                "starter_code": "def apply_discount(order_total):\n    # Calculate discount based on order amount\n    if order_total >= 100:\n        discount_rate = # 20% discount\n    elif order_total >= 50:\n        discount_rate = # 15% discount\n    elif order_total >= 25:\n        discount_rate = # 10% discount\n    else:\n        discount_rate = # No discount\n    \n    discount_amount = order_total * discount_rate\n    final_price = order_total - discount_amount\n    return round(final_price, 2), round(discount_amount, 2)",
+                "solution": "def apply_discount(order_total):\n    if order_total >= 100:\n        discount_rate = 0.20\n    elif order_total >= 50:\n        discount_rate = 0.15\n    elif order_total >= 25:\n        discount_rate = 0.10\n    else:\n        discount_rate = 0.0\n    \n    discount_amount = order_total * discount_rate\n    final_price = order_total - discount_amount\n    return round(final_price, 2), round(discount_amount, 2)",
+                "test_cases": [
+                    {
+                        "function_name": "apply_discount",
+                        "input": [120.00],
+                        "expected": (96.0, 24.0)
+                    },
+                    {
+                        "function_name": "apply_discount",
+                        "input": [75.00],
+                        "expected": (63.75, 11.25)
+                    },
+                    {
+                        "function_name": "apply_discount",
+                        "input": [20.00],
+                        "expected": (20.0, 0.0)
+                    }
+                ],
+                "hints": [
+                    "Use decimal values for discount rates (0.20 = 20%)",
+                    "Calculate discount_amount = total * rate",
+                    "Subtract discount from total for final price",
+                    "Use round() to format currency to 2 decimal places"
+                ],
+                "xp_reward": 45
+            },
+            {
+                "title": "Weather Alert System",
+                "description": "**Weather Alert System**\n**Medium - Multiple Conditions**\n\n**What You're Building:**\nCreate a weather monitoring system that sends appropriate alerts based on conditions.\n\n**Your Task:**\n- Check temperature and weather condition\n- Return \"Heat Warning\" for 85°F+ and sunny\n- Return \"Storm Alert\" for rain and wind 25+ mph\n- Return \"Cold Advisory\" for temperature below 32°F\n- Return \"Pleasant\" for normal conditions\n\n**Skills Practiced:** Logical Operators • Multiple Conditions • Weather Logic\n\n**Example:**\n```python\nalert = weather_alert(90, \"sunny\", 10)\nprint(f\"Alert: {alert}\")  # Alert: Heat Warning\n```",
+                "difficulty": "medium",
+                "starter_code": "def weather_alert(temperature, condition, wind_speed):\n    # Determine weather alert based on conditions\n    if temperature >= 85 and condition == \"sunny\":\n        return # Heat warning\n    elif condition == \"rain\" and wind_speed >= 25:\n        return # Storm alert\n    elif temperature < 32:\n        return # Cold advisory\n    else:\n        return # Pleasant conditions",
+                "solution": "def weather_alert(temperature, condition, wind_speed):\n    if temperature >= 85 and condition == \"sunny\":\n        return \"Heat Warning\"\n    elif condition == \"rain\" and wind_speed >= 25:\n        return \"Storm Alert\"\n    elif temperature < 32:\n        return \"Cold Advisory\"\n    else:\n        return \"Pleasant\"",
+                "test_cases": [
+                    {
+                        "function_name": "weather_alert",
+                        "input": [90, "sunny", 10],
+                        "expected": "Heat Warning"
+                    },
+                    {
+                        "function_name": "weather_alert",
+                        "input": [75, "rain", 30],
+                        "expected": "Storm Alert"
+                    },
+                    {
+                        "function_name": "weather_alert",
+                        "input": [25, "cloudy", 5],
+                        "expected": "Cold Advisory"
+                    },
+                    {
+                        "function_name": "weather_alert",
+                        "input": [72, "partly cloudy", 8],
+                        "expected": "Pleasant"
+                    }
+                ],
+                "hints": [
+                    "Use 'and' operator to check multiple conditions",
+                    "Check temperature >= 85 AND condition == 'sunny'",
+                    "Use == for string comparison",
+                    "Order conditions from most specific to general"
+                ],
+                "xp_reward": 50
+            },
+            {
+                "title": "Login Validator",
+                "description": "**Login Validator**\n**Medium - Security Logic**\n\n**What You're Building:**\nCreate a user authentication system for a secure banking application.\n\n**Your Task:**\n- Check if username length is 3-20 characters\n- Check if password length is 8+ characters\n- Check if password contains at least one digit\n- Return \"Valid\" or specific error message\n\n**Skills Practiced:** String Validation • Security Checks • Complex Conditionals\n\n**Example:**\n```python\nresult = validate_login(\"user123\", \"password1\")\nprint(f\"Status: {result}\")  # Status: Valid\n```",
+                "difficulty": "medium",
+                "starter_code": "def validate_login(username, password):\n    # Validate username and password requirements\n    if len(username) < 3 or len(username) > 20:\n        return # Username length error\n    elif len(password) < 8:\n        return # Password length error\n    elif not any(char.isdigit() for char in password):\n        return # Password digit requirement error\n    else:\n        return # Valid credentials",
+                "solution": "def validate_login(username, password):\n    if len(username) < 3 or len(username) > 20:\n        return \"Username must be 3-20 characters\"\n    elif len(password) < 8:\n        return \"Password must be 8+ characters\"\n    elif not any(char.isdigit() for char in password):\n        return \"Password must contain a digit\"\n    else:\n        return \"Valid\"",
+                "test_cases": [
+                    {
+                        "function_name": "validate_login",
+                        "input": ["user123", "password1"],
+                        "expected": "Valid"
+                    },
+                    {
+                        "function_name": "validate_login",
+                        "input": ["ab", "password1"],
+                        "expected": "Username must be 3-20 characters"
+                    },
+                    {
+                        "function_name": "validate_login",
+                        "input": ["user123", "short"],
+                        "expected": "Password must be 8+ characters"
+                    },
+                    {
+                        "function_name": "validate_login",
+                        "input": ["user123", "password"],
+                        "expected": "Password must contain a digit"
+                    }
+                ],
+                "hints": [
+                    "Check username length with len()",
+                    "Use 'or' for multiple invalid conditions",
+                    "Use any() with isdigit() to check for digits",
+                    "Return specific error messages for each case"
+                ],
+                "xp_reward": 55
+            },
+            {
+                "title": "Restaurant Order Validator",
+                "description": "**Restaurant Order Validator**\n**Hard - Complex Business Logic**\n\n**What You're Building:**\nCreate an order validation system for a restaurant delivery app with complex rules.\n\n**Your Task:**\n- Check if order total meets $15 minimum for delivery\n- Apply $3 delivery fee if under $25\n- Check if delivery time is between 11 AM and 10 PM (11-22 in 24hr)\n- Return order status and final total\n\n**Skills Practiced:** Business Logic • Time Validation • Multi-step Calculations\n\n**Example:**\n```python\nstatus, total = validate_order(18.50, 14)\nprint(f\"{status}: ${total:.2f}\")  # Valid Order: $21.50\n```",
+                "difficulty": "hard",
+                "starter_code": "def validate_order(order_total, delivery_hour):\n    # Validate restaurant delivery order\n    if order_total < 15:\n        return # Minimum order error\n    elif delivery_hour < 11 or delivery_hour > 22:\n        return # Outside delivery hours error\n    else:\n        # Calculate final total with delivery fee\n        if order_total < 25:\n            final_total = # Add delivery fee\n        else:\n            final_total = # No delivery fee\n        return \"Valid Order\", round(final_total, 2)",
+                "solution": "def validate_order(order_total, delivery_hour):\n    if order_total < 15:\n        return \"Order below $15 minimum\", order_total\n    elif delivery_hour < 11 or delivery_hour > 22:\n        return \"Outside delivery hours\", order_total\n    else:\n        if order_total < 25:\n            final_total = order_total + 3.0\n        else:\n            final_total = order_total\n        return \"Valid Order\", round(final_total, 2)",
+                "test_cases": [
+                    {
+                        "function_name": "validate_order",
+                        "input": [18.50, 14],
+                        "expected": ("Valid Order", 21.5)
+                    },
+                    {
+                        "function_name": "validate_order",
+                        "input": [30.00, 19],
+                        "expected": ("Valid Order", 30.0)
+                    },
+                    {
+                        "function_name": "validate_order",
+                        "input": [12.00, 15],
+                        "expected": ("Order below $15 minimum", 12.0)
+                    },
+                    {
+                        "function_name": "validate_order",
+                        "input": [20.00, 23],
+                        "expected": ("Outside delivery hours", 20.0)
+                    }
+                ],
+                "hints": [
+                    "Check minimum order amount first",
+                    "Validate delivery hours (11-22)",
+                    "Add $3 delivery fee for orders under $25",
+                    "Return tuple with status message and total"
+                ],
+                "xp_reward": 65
             }
         ]
 
