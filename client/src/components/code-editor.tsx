@@ -143,35 +143,47 @@ export function CodeEditor({
             <Button
               onClick={onRun}
               disabled={isRunning}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white"
+              className={`bg-emerald-600 hover:bg-emerald-700 text-white transition-all duration-300 transform ${
+                isRunning ? 'scale-105 animate-pulse' : 'hover:scale-105'
+              }`}
             >
               {isRunning ? (
-                <i className="fas fa-spinner fa-spin mr-2"></i>
+                <div className="animate-spin mr-2">
+                  <Play className="w-4 h-4" />
+                </div>
               ) : (
-                <Play className="w-4 h-4 mr-2" />
+                <Play className="w-4 h-4 mr-2 transition-transform duration-200" />
               )}
-              {isRunning ? 'Running...' : 'Run Code'}
+              <span className="transition-all duration-200">
+                {isRunning ? 'Running...' : 'Run Code'}
+              </span>
             </Button>
             
             <Button
               onClick={onSubmit}
               disabled={isSubmitting}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
+              className={`bg-blue-600 hover:bg-blue-700 text-white transition-all duration-300 transform ${
+                isSubmitting ? 'scale-105 animate-pulse' : 'hover:scale-105'
+              }`}
             >
               {isSubmitting ? (
-                <i className="fas fa-spinner fa-spin mr-2"></i>
+                <div className="animate-spin mr-2">
+                  <Check className="w-4 h-4" />
+                </div>
               ) : (
-                <Check className="w-4 h-4 mr-2" />
+                <Check className="w-4 h-4 mr-2 transition-transform duration-200" />
               )}
-              {isSubmitting ? 'Submitting...' : 'Submit'}
+              <span className="transition-all duration-200">
+                {isSubmitting ? 'Submitting...' : 'Submit'}
+              </span>
             </Button>
             
             <Button
               onClick={onReset}
               variant="ghost"
-              className="text-gray-400 hover:text-white"
+              className="text-gray-400 hover:text-white transition-all duration-200 hover:scale-105"
             >
-              <RotateCcw className="w-4 h-4 mr-2" />
+              <RotateCcw className="w-4 h-4 mr-2 transition-transform duration-200 hover:rotate-180" />
               Reset
             </Button>
           </div>

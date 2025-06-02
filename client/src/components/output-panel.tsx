@@ -35,19 +35,21 @@ export function OutputPanel({ result, onNextProblem, showNextButton }: OutputPan
               <Card className="bg-gray-900 text-white">
                 <CardContent className="p-3 font-mono text-sm">
                   {result ? (
-                    <div className="space-y-1">
+                    <div className={`space-y-1 transition-all duration-500 ${
+                      result.success ? 'animate-fade-in' : 'animate-shake'
+                    }`}>
                       {result.output && (
-                        <div className="text-gray-300">{result.output}</div>
+                        <div className="text-gray-300 animate-slide-up">{result.output}</div>
                       )}
                       {result.success ? (
-                        <div className="text-emerald-400">✓ All tests passed!</div>
+                        <div className="text-emerald-400 animate-bounce-in">✓ All tests passed!</div>
                       ) : (
-                        <div className="text-red-400">
+                        <div className="text-red-400 animate-pulse">
                           {result.error || '✗ Some tests failed'}
                         </div>
                       )}
                       {result.execution_time && (
-                        <div className="text-gray-400 text-xs">
+                        <div className="text-gray-400 text-xs animate-fade-in-delayed">
                           Execution time: {result.execution_time}ms
                         </div>
                       )}
@@ -90,11 +92,12 @@ export function OutputPanel({ result, onNextProblem, showNextButton }: OutputPan
                   {result.test_results.map((test, index) => (
                     <Card 
                       key={index}
-                      className={`${
+                      className={`transition-all duration-300 transform hover:scale-102 ${
                         test.passed 
-                          ? 'bg-emerald-50 border-emerald-200' 
-                          : 'bg-red-50 border-red-200'
+                          ? 'bg-emerald-50 border-emerald-200 animate-slide-in-right' 
+                          : 'bg-red-50 border-red-200 animate-slide-in-right'
                       }`}
+                      style={{ animationDelay: `${index * 100}ms` }}
                     >
                       <CardContent className="p-3">
                         <div className="flex items-center justify-between mb-2">
@@ -138,10 +141,10 @@ export function OutputPanel({ result, onNextProblem, showNextButton }: OutputPan
         <div className="border-t border-gray-200 p-4">
           <Button
             onClick={onNextProblem}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white transition-all duration-300 transform hover:scale-105 animate-bounce-in"
           >
             Next Problem
-            <ArrowRight className="w-4 h-4 ml-2" />
+            <ArrowRight className="w-4 h-4 ml-2 transition-transform duration-200 group-hover:translate-x-1" />
           </Button>
         </div>
       )}
