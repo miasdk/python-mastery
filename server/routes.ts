@@ -573,7 +573,11 @@ ${friendlyExplanation ? 'Try the suggestion above and submit again!' : 'Fix the 
           const currentUser = user[0];
           const newTotalXP = currentUser.totalXp + xpGained;
           const newTotalProblems = currentUser.totalProblems + 1;
-          const newStreak = currentUser.currentStreak + 1;
+          
+          // Streak calculation: only increase if this is the first problem solved today
+          // For now, we'll keep the streak the same since we don't track daily completion dates
+          // In a real app, you'd check if user solved a problem today already
+          const newStreak = currentUser.currentStreak; // Don't auto-increment
 
           // Update user stats in database
           await database
@@ -619,6 +623,7 @@ ${friendlyExplanation ? 'Try the suggestion above and submit again!' : 'Fix the 
             updated_stats: {
               total_xp: newTotalXP,
               total_problems: newTotalProblems,
+              total_available_problems: 60,
               current_streak: newStreak
             }
           };

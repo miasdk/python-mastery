@@ -47,7 +47,7 @@ export function Sidebar({ sections, currentProblemId, stats, achievements }: Sid
         
         <div className="grid grid-cols-2 gap-4">
           <div className="text-center">
-            <div className="text-lg font-bold text-gray-900">{stats.problems_solved}</div>
+            <div className="text-lg font-bold text-gray-900">{stats.problems_solved}/60</div>
             <div className="text-xs text-gray-500">Problems Solved</div>
           </div>
           <div className="text-center">

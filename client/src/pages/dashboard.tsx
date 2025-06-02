@@ -82,7 +82,11 @@ export default function Dashboard() {
               <p className="text-gray-600">Ready to continue your Python journey?</p>
             </div>
             
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-6">
+              <div className="text-right">
+                <div className="text-sm text-gray-500">Problems Solved</div>
+                <div className="text-lg font-bold text-green-600">{dashboardData.stats.problems_solved}/60</div>
+              </div>
               <div className="text-right">
                 <div className="text-sm text-gray-500">Total XP</div>
                 <div className="text-lg font-bold text-blue-600">{dashboardData.stats.total_xp}</div>
