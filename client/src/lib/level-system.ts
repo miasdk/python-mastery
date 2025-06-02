@@ -6,14 +6,30 @@ export interface LevelInfo {
   xpForNextLevel: number;
   progressToNext: number;
   progressPercentage: number;
+  nextUnlock?: string;
+  xpToNextUnlock?: number;
 }
 
 export const LEVEL_THRESHOLDS = [
-  { level: 1, title: "Beginner", min: 0, max: 500 },
-  { level: 2, title: "Novice", min: 500, max: 1500 },
-  { level: 3, title: "Developer", min: 1500, max: 3000 },
-  { level: 4, title: "Expert", min: 3000, max: 5000 },
-  { level: 5, title: "Master", min: 5000, max: Infinity }
+  { level: 1, title: "Beginner", min: 0, max: 200 },
+  { level: 2, title: "Student", min: 200, max: 600 },
+  { level: 3, title: "Learner", min: 600, max: 1200 },
+  { level: 4, title: "Developer", min: 1200, max: 2000 },
+  { level: 5, title: "Programmer", min: 2000, max: 3200 },
+  { level: 6, title: "Expert", min: 3200, max: 5000 },
+  { level: 7, title: "Master", min: 5000, max: Infinity }
+];
+
+export const XP_UNLOCKS = [
+  { xp: 500, feature: "Detailed code analysis" },
+  { xp: 600, feature: "Hard difficulty problems" },
+  { xp: 1000, feature: "AI-powered hints" },
+  { xp: 1200, feature: "Bonus algorithm challenges" },
+  { xp: 1500, feature: "Performance optimization tips" },
+  { xp: 2000, feature: "Interview preparation problems" },
+  { xp: 2500, feature: "Career guidance features" },
+  { xp: 3200, feature: "Advanced optimization challenges" },
+  { xp: 5000, feature: "Exclusive Master problem sets" }
 ];
 
 export function calculateLevel(totalXP: number): LevelInfo {
@@ -31,6 +47,9 @@ export function calculateLevel(totalXP: number): LevelInfo {
   const xpNeededForNext = xpForNextLevel - xpForCurrentLevel;
   const progressPercentage = Math.min((progressToNext / xpNeededForNext) * 100, 100);
 
+  // Find next unlock
+  const nextUnlock = XP_UNLOCKS.find(unlock => unlock.xp > totalXP);
+
   return {
     level: currentLevelData.level,
     title: currentLevelData.title,
@@ -38,7 +57,9 @@ export function calculateLevel(totalXP: number): LevelInfo {
     xpForCurrentLevel,
     xpForNextLevel: nextLevelData ? xpForNextLevel : totalXP,
     progressToNext,
-    progressPercentage
+    progressPercentage,
+    nextUnlock: nextUnlock?.feature,
+    xpToNextUnlock: nextUnlock ? nextUnlock.xp - totalXP : undefined
   };
 }
 
