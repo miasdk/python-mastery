@@ -47,7 +47,6 @@ export function ProblemDescription({ problem, onHintUsed }: ProblemDescriptionPr
 
       <div className="flex-1 overflow-y-auto p-6">
         <div className="prose prose-sm max-w-none">
-          <h3 className="text-sm font-semibold text-gray-900 mb-3">Problem Statement</h3>
           <div className="text-sm text-gray-700 mb-4">
             {(() => {
               const lines = problem.description.split('\n');
