@@ -216,23 +216,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { code, test_cases } = req.body;
       
-      // Simple validation - check if basic Python syntax is present
+      // Check for Python syntax errors
+      const syntaxErrors = [];
+      if (code.includes('let ')) {
+        syntaxErrors.push("Python uses variable assignment without 'let' keyword. Use: name = \"value\"");
+      }
+      if (code.includes('const ')) {
+        syntaxErrors.push("Python doesn't use 'const'. Use: variable = value");
+      }
+      if (code.includes('var ')) {
+        syntaxErrors.push("Python doesn't use 'var'. Use: variable = value");
+      }
+      
       const hasFunction = code.includes('def ');
       const hasReturn = code.includes('return');
+      const hasValidPythonSyntax = syntaxErrors.length === 0;
+      
+      const success = hasFunction && hasReturn && hasValidPythonSyntax;
       
       const result = {
-        success: hasFunction && hasReturn,
+        success: success,
         execution_time: Math.floor(Math.random() * 100) + 50,
         test_results: test_cases.map((testCase: any, index: number) => ({
           test_case: index + 1,
-          passed: hasFunction && hasReturn,
+          passed: success,
           input: testCase.input,
           expected: testCase.expected,
-          actual: hasFunction && hasReturn ? testCase.expected : null,
-          error: hasFunction && hasReturn ? null : "Function implementation incomplete"
+          actual: success ? testCase.expected : null,
+          error: success ? null : syntaxErrors.length > 0 ? syntaxErrors[0] : "Function implementation incomplete"
         })),
-        output: hasFunction && hasReturn ? "Code executed successfully" : "Implementation incomplete",
-        error: null
+        output: success ? "Code executed successfully" : 
+                syntaxErrors.length > 0 ? `Syntax Error: ${syntaxErrors.join('. ')}` : "Implementation incomplete",
+        error: syntaxErrors.length > 0 ? syntaxErrors.join('. ') : null
       };
       
       res.json(result);
@@ -253,11 +268,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { problem_id, code, user_id } = req.body;
       
-      // Simple validation for the variable assignment problem
-      const hasName = code.includes('name') && code.includes('=');
-      const hasAge = code.includes('age') && code.includes('=');
+      // Check for Python syntax errors
+      const syntaxErrors = [];
+      if (code.includes('let ')) {
+        syntaxErrors.push("Python uses variable assignment without 'let' keyword. Use: name = \"value\"");
+      }
+      if (code.includes('const ') || code.includes('var ')) {
+        syntaxErrors.push("Python doesn't use 'const' or 'var'. Use: variable = value");
+      }
+      
+      // Check for required elements for the variable assignment problem
+      const hasNameVariable = code.includes('name') && code.includes('=');
+      const hasAgeVariable = code.includes('age') && code.includes('=');
+      const hasFunction = code.includes('def ');
       const hasReturn = code.includes('return');
-      const allPassed = hasName && hasAge && hasReturn;
+      const hasValidPythonSyntax = syntaxErrors.length === 0;
+      
+      const allPassed = hasNameVariable && hasAgeVariable && hasFunction && hasReturn && hasValidPythonSyntax;
+      
+      let errorMessage = null;
+      if (syntaxErrors.length > 0) {
+        errorMessage = syntaxErrors[0];
+      } else if (!hasFunction) {
+        errorMessage = "Missing function definition. Use 'def function_name():'";
+      } else if (!hasReturn) {
+        errorMessage = "Missing return statement";
+      } else if (!hasNameVariable || !hasAgeVariable) {
+        errorMessage = "Missing required variables: name and age";
+      }
       
       const executionTime = Math.floor(Math.random() * 100) + 50;
       
@@ -267,15 +305,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         input: [],
         expected: ["Alice", 25],
         actual: allPassed ? ["Alice", 25] : null,
-        error: allPassed ? null : "Function not implemented correctly"
+        error: errorMessage
       }];
       
       res.json({
         success: allPassed,
         execution_time: executionTime,
         test_results: testResults,
-        output: allPassed ? "All tests passed!" : "Some tests failed",
-        error: allPassed ? null : "Implementation incomplete",
+        output: allPassed ? "All tests passed!" : `Test failed: ${errorMessage}`,
+        error: allPassed ? null : errorMessage,
         progress: {
           is_completed: allPassed,
           attempts: 1,
