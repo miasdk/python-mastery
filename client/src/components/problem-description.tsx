@@ -48,10 +48,54 @@ export function ProblemDescription({ problem, onHintUsed }: ProblemDescriptionPr
       <div className="flex-1 overflow-y-auto p-6">
         <div className="prose prose-sm max-w-none">
           <h3 className="text-sm font-semibold text-gray-900 mb-3">Problem Statement</h3>
-          <div 
-            className="text-sm text-gray-700 mb-4 whitespace-pre-wrap"
-            dangerouslySetInnerHTML={{ __html: problem.description.replace(/\n/g, '<br />') }}
-          />
+          <div className="text-sm text-gray-700 mb-4 whitespace-pre-wrap">
+            {problem.description.split('\n').map((line, index) => {
+              // Handle bold text
+              if (line.startsWith('**') && line.endsWith('**')) {
+                const text = line.slice(2, -2);
+                return (
+                  <div key={index} className="font-semibold text-gray-900 mb-2">
+                    {text}
+                  </div>
+                );
+              }
+              
+              // Handle bullet points
+              if (line.startsWith('- ')) {
+                return (
+                  <div key={index} className="ml-4 mb-1">
+                    • {line.slice(2)}
+                  </div>
+                );
+              }
+              
+              // Handle code blocks
+              if (line.startsWith('```')) {
+                return null; // Skip opening/closing code block markers
+              }
+              
+              // Handle code content (lines between code blocks)
+              if (line.startsWith('print(') || line.startsWith('total =') || line.includes('f"') || line.includes('# ')) {
+                return (
+                  <div key={index} className="font-mono text-xs bg-gray-100 px-2 py-1 rounded mb-1">
+                    {line}
+                  </div>
+                );
+              }
+              
+              // Handle empty lines
+              if (line.trim() === '') {
+                return <div key={index} className="mb-2" />;
+              }
+              
+              // Regular text
+              return (
+                <div key={index} className="mb-1">
+                  {line}
+                </div>
+              );
+            })}
+          </div>
 
           {/* Example section if present in description */}
           {problem.description.includes('Example:') && (
