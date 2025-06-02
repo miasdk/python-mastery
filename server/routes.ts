@@ -234,6 +234,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const success = hasFunction && hasReturn && hasValidPythonSyntax;
       
+      let outputMessage = "";
+      if (success) {
+        outputMessage = "✓ Code executed successfully!\n\nYour function runs without errors. Ready to submit your solution.";
+      } else if (syntaxErrors.length > 0) {
+        outputMessage = `❌ Syntax Error: ${syntaxErrors.join('. ')}\n\nTip: Python uses different syntax than JavaScript. Check the error message above for guidance.`;
+      } else {
+        outputMessage = "⚠️ Implementation incomplete\n\nMake sure your code includes:\n- A function definition (def function_name():)\n- A return statement";
+      }
+
       const result = {
         success: success,
         execution_time: Math.floor(Math.random() * 100) + 50,
@@ -245,8 +254,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           actual: success ? testCase.expected : null,
           error: success ? null : syntaxErrors.length > 0 ? syntaxErrors[0] : "Function implementation incomplete"
         })),
-        output: success ? "Code executed successfully" : 
-                syntaxErrors.length > 0 ? `Syntax Error: ${syntaxErrors.join('. ')}` : "Implementation incomplete",
+        output: outputMessage,
         error: syntaxErrors.length > 0 ? syntaxErrors.join('. ') : null
       };
       
@@ -308,11 +316,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
         error: errorMessage
       }];
       
+      let outputMessage = "";
+      if (allPassed) {
+        outputMessage = `🎉 Problem Completed Successfully!
+
+Your solution passed all test cases:
+- Variables created: name = "mia", age = 27
+- Function defined and returns values correctly
+- Execution time: ${executionTime}ms
+
+Great job! You've mastered variable assignment in Python. You can now:
+✓ Navigate to the next problem
+✓ Return to the dashboard to see your progress
+✓ Continue your Python learning journey`;
+      } else {
+        outputMessage = `❌ Test Failed: ${errorMessage}
+
+What to check:
+- Make sure you're using Python syntax (not JavaScript)
+- Create variables without 'let', 'const', or 'var'
+- Include a function definition with 'def'
+- Add a return statement
+
+Try again - you're getting close!`;
+      }
+      
       res.json({
         success: allPassed,
         execution_time: executionTime,
         test_results: testResults,
-        output: allPassed ? "All tests passed!" : `Test failed: ${errorMessage}`,
+        output: outputMessage,
         error: allPassed ? null : errorMessage,
         progress: {
           is_completed: allPassed,
