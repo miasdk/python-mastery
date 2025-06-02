@@ -4,7 +4,7 @@ import { drizzle } from "drizzle-orm/node-postgres";
 import pkg from "pg";
 const { Pool } = pkg;
 import * as schema from "../shared/schema";
-import { eq, asc, desc, and } from "drizzle-orm";
+import { eq, asc, desc, and, or, isNull } from "drizzle-orm";
 
 // Initialize database connection
 const pool = new Pool({
@@ -96,30 +96,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         };
       });
       
-      // Find current problem - get the first incomplete problem ordered by ID
+      // Find current problem - get the first problem since progress was reset
       let currentProblem = null;
-      const nextIncompleteProblems = await database
+      const firstProblem = await database
         .select()
         .from(schema.problems)
-        .leftJoin(
-          schema.userProgress,
-          and(
-            eq(schema.userProgress.problemId, schema.problems.id),
-            eq(schema.userProgress.userId, userId)
-          )
-        )
-        .where(
-          or(
-            eq(schema.userProgress.isCompleted, false),
-            isNull(schema.userProgress.isCompleted)
-          )
-        )
         .orderBy(asc(schema.problems.id))
         .limit(1);
         
-      if (nextIncompleteProblems.length > 0) {
-        const nextProblem = nextIncompleteProblems[0].problems;
-        currentProblem = nextProblem;
+      if (firstProblem.length > 0) {
+        currentProblem = firstProblem[0];
       }
       
       // Calculate stats
