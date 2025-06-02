@@ -519,22 +519,33 @@ Fix the issues above and try again.`;
           }
         }
         
-        outputMessage = `
->>> ${functionName}()
-${displayResult}
+        // Clean, minimal output format
+        const functionCall = `${functionName}()`;
+        const cleanResult = displayResult;
+        
+        // Add practical usage example based on problem type
+        let usageExample = '';
+        const problemTitle = problem.length > 0 ? problem[0].title.toLowerCase() : '';
+        if (problemTitle.includes('business card')) {
+          usageExample = `name, age, city, job = ${functionName}()\nprint(f"{name}, {age} years old from {city}")\nAlice Johnson, 25 years old from Boston`;
+        } else if (problemTitle.includes('temperature')) {
+          usageExample = `celsius, fahrenheit, kelvin = ${functionName}()\nprint(f"Room temperature: {celsius}°C / {fahrenheit}°F")\nRoom temperature: 22°C / 71.6°F`;
+        } else if (problemTitle.includes('calculator')) {
+          usageExample = `result = ${functionName}()\nprint(f"Calculation result: {result}")\nCalculation result: ${cleanResult}`;
+        } else {
+          usageExample = `result = ${functionName}()\nprint("Function completed successfully!")\nFunction completed successfully!`;
+        }
 
-✅ All tests passed
-Execution time: ${executionTime}ms`;
+        outputMessage = `${functionCall}
+${cleanResult}
+
+${usageExample}`;
       } else {
         const friendlyPart = friendlyExplanation ? `
 
 💡 ${friendlyExplanation}` : '';
         
-        outputMessage = `
->>> Running your code...
-Error: ${errorMessage}${friendlyPart}
-
-❌ Submission failed
+        outputMessage = `Error: ${errorMessage}${friendlyPart}
 
 ${!hasFunction ? '❌ Function definition missing' : '✅ Function definition complete'}
 ${!hasReturn ? '❌ Return statement missing' : '✅ Return statement present'}
