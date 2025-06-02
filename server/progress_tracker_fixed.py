@@ -43,7 +43,7 @@ class ProgressTracker:
                 {"user_id": user_id, "problem_id": problem_id}
             ).fetchone()
             
-            if not completed_check.is_completed:
+            if completed_check and not completed_check.is_completed:
                 # Mark as completed
                 self.db.execute(
                     text("""
@@ -87,7 +87,7 @@ class ProgressTracker:
         return {
             "xp_gained": xp_gained,
             "new_achievements": new_achievements,
-            "is_completed": is_correct and (not completed_check.is_completed if 'completed_check' in locals() else True)
+            "is_completed": is_correct
         }
 
     def _update_streak(self, user_id: int):

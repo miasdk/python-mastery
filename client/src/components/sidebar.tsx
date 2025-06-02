@@ -128,13 +128,19 @@ export function Sidebar({ sections, currentProblemId, stats, achievements }: Sid
                     }`}>
                       {section.order_index}. {section.title}
                     </h4>
-                    {isCompleted && <CheckCircle className="w-5 h-5 text-emerald-600" />}
-                    {section.is_locked && <Lock className="w-5 h-5 text-gray-400" />}
-                    {!isCompleted && !section.is_locked && (
-                      <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center">
-                        <span className="text-white text-xs font-bold">{section.order_index}</span>
-                      </div>
-                    )}
+                    <div className="flex items-center space-x-2">
+                      <span className="text-xs text-gray-500">
+                        ({section.lessons.reduce((sum, lesson) => sum + lesson.completed_problems, 0)}/
+                        {section.lessons.reduce((sum, lesson) => sum + lesson.total_problems, 0)} problems)
+                      </span>
+                      {isCompleted && <CheckCircle className="w-5 h-5 text-emerald-600" />}
+                      {section.is_locked && <Lock className="w-5 h-5 text-gray-400" />}
+                      {!isCompleted && !section.is_locked && (
+                        <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center">
+                          <span className="text-white text-xs font-bold">{section.order_index}</span>
+                        </div>
+                      )}
+                    </div>
                   </div>
                   
                   <div className="space-y-2">
@@ -154,14 +160,19 @@ export function Sidebar({ sections, currentProblemId, stats, achievements }: Sid
                             <Circle className="w-4 h-4 text-gray-300 mr-2" />
                           )}
                           
-                          <span className={
-                            lessonCompleted ? "text-emerald-700" :
-                            hasCurrentProblem ? "text-blue-900 font-medium" :
-                            lesson.is_locked ? "text-gray-500" :
-                            "text-gray-700"
-                          }>
-                            {lesson.title}
-                          </span>
+                          <div className="flex-1">
+                            <span className={
+                              lessonCompleted ? "text-emerald-700" :
+                              hasCurrentProblem ? "text-blue-900 font-medium" :
+                              lesson.is_locked ? "text-gray-500" :
+                              "text-gray-700"
+                            }>
+                              {lesson.title}
+                            </span>
+                            <span className="text-xs text-gray-400 ml-2">
+                              ({lesson.completed_problems}/{lesson.total_problems})
+                            </span>
+                          </div>
                         </div>
                       );
                     })}
