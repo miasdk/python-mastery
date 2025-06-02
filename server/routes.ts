@@ -4,7 +4,7 @@ import { drizzle } from "drizzle-orm/node-postgres";
 import pkg from "pg";
 const { Pool } = pkg;
 import * as schema from "../shared/schema";
-import { eq, asc, desc } from "drizzle-orm";
+import { eq, asc, desc, and } from "drizzle-orm";
 
 // Initialize database connection
 const pool = new Pool({
@@ -569,11 +569,10 @@ ${friendlyExplanation ? 'Try the suggestion above and submit again!' : 'Fix the 
       };
 
       if (allPassed) {
-        // Calculate XP gains
-        const baseXP = 50;
-        const efficiencyBonus = Math.max(0, 45 - (1 * 5)); // 45 bonus for first attempt
-        const hintPenalty = 0; // No hints tracked in this simple version
-        const xpGained = Math.max(10, baseXP + efficiencyBonus - hintPenalty);
+        // Use actual problem XP reward with small efficiency bonus
+        const baseXP = problemData.xpReward || 50;
+        const efficiencyBonus = Math.max(0, Math.floor(baseXP * 0.25) - (1 * 2)); // 25% bonus for first attempt, -2 per additional attempt
+        const xpGained = baseXP + efficiencyBonus;
 
         // Get current user stats to update them
         const user = await database
@@ -591,6 +590,53 @@ ${friendlyExplanation ? 'Try the suggestion above and submit again!' : 'Fix the 
           // For now, we'll keep the streak the same since we don't track daily completion dates
           // In a real app, you'd check if user solved a problem today already
           const newStreak = currentUser.currentStreak; // Don't auto-increment
+
+          // Save code submission record
+          await database.insert(schema.codeSubmissions).values({
+            userId: user_id || 1,
+            problemId: problem_id,
+            code: code,
+            isCorrect: allPassed,
+            executionTime: executionTime,
+            output: outputMessage,
+            error: allPassed ? null : errorMessage
+          });
+
+          // Check if user progress exists for this problem
+          const existingProgress = await database
+            .select()
+            .from(schema.userProgress)
+            .where(and(
+              eq(schema.userProgress.userId, user_id || 1),
+              eq(schema.userProgress.problemId, problem_id)
+            ))
+            .limit(1);
+
+          if (existingProgress.length > 0) {
+            // Update existing progress
+            await database
+              .update(schema.userProgress)
+              .set({
+                isCompleted: allPassed,
+                attempts: existingProgress[0].attempts + 1,
+                bestTime: allPassed ? Math.min(existingProgress[0].bestTime || 999999, executionTime) : existingProgress[0].bestTime,
+                completedAt: allPassed ? new Date() : existingProgress[0].completedAt,
+                lastAttemptAt: new Date()
+              })
+              .where(eq(schema.userProgress.id, existingProgress[0].id));
+          } else {
+            // Create new progress record
+            await database.insert(schema.userProgress).values({
+              userId: user_id || 1,
+              problemId: problem_id,
+              isCompleted: allPassed,
+              attempts: 1,
+              bestTime: allPassed ? executionTime : null,
+              hintsUsed: 0,
+              completedAt: allPassed ? new Date() : null,
+              lastAttemptAt: new Date()
+            });
+          }
 
           // Update user stats in database
           await database
@@ -629,7 +675,7 @@ ${friendlyExplanation ? 'Try the suggestion above and submit again!' : 'Fix the 
             xp_breakdown: {
               base_xp: baseXP,
               efficiency_bonus: efficiencyBonus,
-              hint_penalty: hintPenalty,
+              hint_penalty: 0,
               total_gained: xpGained
             },
             new_achievements: achievements,
