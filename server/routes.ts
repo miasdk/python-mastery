@@ -487,17 +487,94 @@ ${!problemSpecificValidation ? '❌ Implementation incomplete' : '✅ Implementa
 Fix the issues above and try submitting again.`;
       }
       
+      // Enhanced progress tracking with XP system
+      let progressData: any = {
+        is_completed: allPassed,
+        attempts: 1,
+        best_time: allPassed ? executionTime : null,
+        xp_gained: 0,
+        xp_breakdown: null,
+        new_achievements: [],
+        updated_stats: null
+      };
+
+      if (allPassed) {
+        // Calculate XP gains
+        const baseXP = 50;
+        const efficiencyBonus = Math.max(0, 45 - (1 * 5)); // 45 bonus for first attempt
+        const hintPenalty = 0; // No hints tracked in this simple version
+        const xpGained = Math.max(10, baseXP + efficiencyBonus - hintPenalty);
+
+        // Get current user stats to update them
+        const user = await database
+          .select()
+          .from(schema.users)
+          .where(eq(schema.users.id, user_id || 1))
+          .limit(1);
+
+        if (user.length > 0) {
+          const currentUser = user[0];
+          const newTotalXP = currentUser.totalXp + xpGained;
+          const newTotalProblems = currentUser.totalProblems + 1;
+          const newStreak = currentUser.currentStreak + 1;
+
+          // Update user stats in database
+          await database
+            .update(schema.users)
+            .set({
+              totalXp: newTotalXP,
+              totalProblems: newTotalProblems,
+              currentStreak: newStreak
+            })
+            .where(eq(schema.users.id, user_id || 1));
+
+          // Check for achievements
+          const achievements = [];
+          if (newTotalProblems === 10) {
+            achievements.push({
+              type: "problems_solved",
+              title: "Problem Solver",
+              description: "Solved your first 10 problems",
+              icon: "fas fa-trophy"
+            });
+          }
+          if (newStreak === 7) {
+            achievements.push({
+              type: "streak",
+              title: "Week Warrior", 
+              description: "Solved problems for 7 days in a row",
+              icon: "fas fa-fire"
+            });
+          }
+
+          progressData = {
+            is_completed: allPassed,
+            attempts: 1,
+            best_time: executionTime,
+            xp_gained: xpGained,
+            xp_breakdown: {
+              base_xp: baseXP,
+              efficiency_bonus: efficiencyBonus,
+              hint_penalty: hintPenalty,
+              total_gained: xpGained
+            },
+            new_achievements: achievements,
+            updated_stats: {
+              total_xp: newTotalXP,
+              total_problems: newTotalProblems,
+              current_streak: newStreak
+            }
+          };
+        }
+      }
+
       res.json({
         success: allPassed,
         execution_time: executionTime,
         test_results: testResults,
         output: outputMessage,
         error: allPassed ? null : errorMessage,
-        progress: {
-          is_completed: allPassed,
-          attempts: 1,
-          best_time: allPassed ? executionTime : null
-        }
+        progress: progressData
       });
     } catch (error) {
       console.error("Solution submission error:", error);
