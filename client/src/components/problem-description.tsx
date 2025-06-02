@@ -126,7 +126,9 @@ export function ProblemDescription({ problem, onHintUsed }: ProblemDescriptionPr
                 // Handle section headers (Description:, Example:, etc.)
                 if (line.includes(':')) {
                   const cleanLine = line.replace(/^\*\*/, '').replace(/\*\*$/, '').replace(/\*\*/g, '');
-                  if (cleanLine.includes('Description') || cleanLine.includes('Example') || cleanLine.includes('Skills') || cleanLine.includes('Objective')) {
+                  if (cleanLine.includes('Description') || cleanLine.includes('Example') || cleanLine.includes('Skills') || 
+                      cleanLine.includes('Objective') || cleanLine.includes('Business Context') || 
+                      cleanLine.includes('Your Task')) {
                     elements.push(
                       <h3 key={i} className="font-medium text-slate-800 text-sm mb-2 mt-4 border-b border-slate-200 pb-1">
                         {cleanLine}
