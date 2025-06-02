@@ -365,13 +365,60 @@ Fix the issues above and try again.`;
     try {
       const { problem_id, code, user_id } = req.body;
       
-      // Check for Python syntax errors
+      // Adaptive syntax error explainer
       const syntaxErrors = [] as string[];
+      const friendlyErrors = [] as string[];
+
+      // JavaScript/other language keywords
       if (code.includes('let ')) {
         syntaxErrors.push("Python uses variable assignment without 'let' keyword. Use: name = \"value\"");
+        friendlyErrors.push("I see you're using 'let' - that's JavaScript! In Python, we just write: name = \"John\"");
       }
       if (code.includes('const ') || code.includes('var ')) {
         syntaxErrors.push("Python doesn't use 'const' or 'var'. Use: variable = value");
+        friendlyErrors.push("Looks like you're thinking JavaScript! Python doesn't need 'const' or 'var' - just write: age = 25");
+      }
+
+      // Common Python syntax issues
+      if (code.includes('function ')) {
+        syntaxErrors.push("Python uses 'def' for functions, not 'function'");
+        friendlyErrors.push("Almost there! Python uses 'def' instead of 'function'. Try: def my_function():");
+      }
+      
+      if (code.includes('{') && code.includes('}')) {
+        syntaxErrors.push("Python uses indentation instead of curly braces");
+        friendlyErrors.push("Python doesn't use curly braces {}. We use indentation (4 spaces) to group code instead!");
+      }
+
+      if (code.includes('println') || code.includes('console.log')) {
+        syntaxErrors.push("Python uses 'print()' for output");
+        friendlyErrors.push("I see you want to print something! In Python, we use print() instead of console.log or println");
+      }
+
+      // Missing colon after function definition
+      const funcDefMatch = code.match(/def\s+\w+\([^)]*\)\s*\n/);
+      if (funcDefMatch && !funcDefMatch[0].includes(':')) {
+        syntaxErrors.push("Missing colon after function definition");
+        friendlyErrors.push("Don't forget the colon! Python function definitions need a ':' at the end: def my_function():");
+      }
+
+      // Semicolon usage
+      if (code.includes(';')) {
+        syntaxErrors.push("Python doesn't require semicolons at the end of lines");
+        friendlyErrors.push("No semicolons needed! Python is clean and simple - just end your lines naturally");
+      }
+
+      // Incorrect string concatenation
+      if (code.includes(' + ') && code.includes('"') && !code.includes('f"')) {
+        const hasStringConcat = /["'][^"']*["']\s*\+\s*/.test(code);
+        if (hasStringConcat) {
+          friendlyErrors.push("For string formatting, try f-strings! Instead of \"Hello \" + name, use f\"Hello {name}\"");
+        }
+      }
+
+      // Missing return statement detection (for friendly errors)
+      if (!code.includes('return') && code.includes('def ')) {
+        friendlyErrors.push("Your function looks good, but don't forget to return something! Add: return your_result");
       }
       
       // Get the actual problem to determine what to validate
@@ -423,14 +470,20 @@ Fix the issues above and try again.`;
       const allPassed = hasFunction && hasReturn && hasValidPythonSyntax && problemSpecificValidation;
       
       let errorMessage = null;
+      let friendlyExplanation = null;
+      
       if (syntaxErrors.length > 0) {
         errorMessage = syntaxErrors[0];
+        friendlyExplanation = friendlyErrors[0] || null;
       } else if (!hasFunction) {
         errorMessage = "Missing function definition. Use 'def function_name():'";
+        friendlyExplanation = "I don't see a function definition. Start with 'def' followed by your function name, like: def create_business_card():";
       } else if (!hasReturn) {
         errorMessage = "Missing return statement";
+        friendlyExplanation = "Your function looks good, but it needs to give back a result! Add 'return' followed by what you want to return.";
       } else if (validationErrors.length > 0) {
         errorMessage = validationErrors[0];
+        friendlyExplanation = "You're on the right track! Double-check that all the required variables are properly assigned.";
       }
       
       const executionTime = Math.floor(Math.random() * 100) + 50;
@@ -473,9 +526,13 @@ ${displayResult}
 ✅ All tests passed
 Execution time: ${executionTime}ms`;
       } else {
+        const friendlyPart = friendlyExplanation ? `
+
+💡 ${friendlyExplanation}` : '';
+        
         outputMessage = `
 >>> Running your code...
-Error: ${errorMessage}
+Error: ${errorMessage}${friendlyPart}
 
 ❌ Submission failed
 
@@ -484,7 +541,7 @@ ${!hasReturn ? '❌ Return statement missing' : '✅ Return statement present'}
 ${!hasValidPythonSyntax ? '❌ Python syntax invalid' : '✅ Python syntax valid'}
 ${!problemSpecificValidation ? '❌ Implementation incomplete' : '✅ Implementation complete'}
 
-Fix the issues above and try submitting again.`;
+${friendlyExplanation ? 'Try the suggestion above and submit again!' : 'Fix the issues above and try submitting again.'}`;
       }
       
       // Enhanced progress tracking with XP system
