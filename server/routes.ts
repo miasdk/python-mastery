@@ -96,23 +96,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
         };
       });
       
-      // Find current problem
+      // Find current problem - get the first incomplete problem ordered by ID
       let currentProblem = null;
-      for (const section of sectionsWithProgress) {
-        if (!section.isLocked) {
-          for (const lesson of section.lessons) {
-            if (!lesson.isLocked) {
-              for (const problem of lesson.problems) {
-                if (!problem.is_completed) {
-                  currentProblem = problem;
-                  break;
-                }
-              }
-              if (currentProblem) break;
-            }
-          }
-          if (currentProblem) break;
-        }
+      const nextIncompleteProblems = await database
+        .select()
+        .from(schema.problems)
+        .leftJoin(
+          schema.userProgress,
+          and(
+            eq(schema.userProgress.problemId, schema.problems.id),
+            eq(schema.userProgress.userId, userId)
+          )
+        )
+        .where(
+          or(
+            eq(schema.userProgress.isCompleted, false),
+            isNull(schema.userProgress.isCompleted)
+          )
+        )
+        .orderBy(asc(schema.problems.id))
+        .limit(1);
+        
+      if (nextIncompleteProblems.length > 0) {
+        const nextProblem = nextIncompleteProblems[0].problems;
+        currentProblem = nextProblem;
       }
       
       // Calculate stats
