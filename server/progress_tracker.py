@@ -30,6 +30,10 @@ class ProgressTracker:
         progress.attempts += 1
         progress.last_attempt_at = datetime.utcnow()
         
+        xp_gained = 0
+        xp_breakdown = {}
+        new_achievements = []
+        
         # If correct and not previously completed
         if is_correct and not progress.is_completed:
             progress.is_completed = True
@@ -42,24 +46,48 @@ class ProgressTracker:
             # Update user stats
             user = self.db.query(User).filter(User.id == user_id).first()
             if user:
+                old_total_xp = user.total_xp
                 user.total_problems += 1
+                
                 # Award XP (base 50 + bonus for efficiency)
-                xp_bonus = max(0, 50 - progress.attempts * 5)  # Bonus for fewer attempts
-                user.total_xp += 50 + xp_bonus
+                base_xp = 50
+                efficiency_bonus = max(0, 45 - progress.attempts * 5)  # Up to 45 bonus for first attempt
+                hint_penalty = progress.hints_used * 5  # 5 XP penalty per hint
+                xp_gained = max(10, base_xp + efficiency_bonus - hint_penalty)  # Minimum 10 XP
+                
+                xp_breakdown = {
+                    "base_xp": base_xp,
+                    "efficiency_bonus": efficiency_bonus,
+                    "hint_penalty": hint_penalty,
+                    "total_gained": xp_gained
+                }
+                
+                user.total_xp += xp_gained
                 
                 # Update streak
                 self._update_streak(user)
                 
                 # Check for achievements
-                self._check_achievements(user)
+                new_achievements = self._check_achievements(user)
         
         self.db.commit()
+        
+        # Get updated user stats
+        user = self.db.query(User).filter(User.id == user_id).first()
         
         return {
             "progress_updated": True,
             "is_completed": progress.is_completed,
             "attempts": progress.attempts,
-            "best_time": progress.best_time
+            "best_time": progress.best_time,
+            "xp_gained": xp_gained,
+            "xp_breakdown": xp_breakdown,
+            "new_achievements": new_achievements,
+            "updated_stats": {
+                "total_xp": user.total_xp,
+                "total_problems": user.total_problems,
+                "current_streak": user.current_streak
+            } if user else {}
         }
 
     def _update_streak(self, user: User):
@@ -91,6 +119,7 @@ class ProgressTracker:
     def _check_achievements(self, user: User):
         """Check and award achievements"""
         achievements_to_award = []
+        new_achievements_awarded = []
         
         # Streak achievements
         if user.current_streak == 7:
@@ -146,6 +175,9 @@ class ProgressTracker:
                     **achievement_data
                 )
                 self.db.add(achievement)
+                new_achievements_awarded.append(achievement_data)
+        
+        return new_achievements_awarded
 
     def get_user_progress_summary(self, user_id: int) -> Dict[str, Any]:
         """Get a summary of user's progress"""

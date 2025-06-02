@@ -50,6 +50,19 @@ export interface CodeExecutionResult {
     attempts: number;
     best_time?: number;
     hints_used: number;
+    xp_gained: number;
+    xp_breakdown?: {
+      base_xp: number;
+      efficiency_bonus: number;
+      hint_penalty: number;
+      total_gained: number;
+    };
+    new_achievements?: Achievement[];
+    updated_stats?: {
+      total_xp: number;
+      total_problems: number;
+      current_streak: number;
+    };
   };
 }
 

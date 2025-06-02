@@ -2,7 +2,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CheckCircle, XCircle, Clock, ArrowRight } from "lucide-react";
+import { CheckCircle, XCircle, Clock, ArrowRight, Trophy, Star, Zap } from "lucide-react";
 import { CodeExecutionResult } from "@/types";
 
 interface OutputPanelProps {
@@ -63,6 +63,89 @@ export function OutputPanel({ result, onNextProblem, showNextButton }: OutputPan
               </Card>
             </div>
 
+            {/* XP Gains and Progress Updates */}
+            {result?.success && result?.progress?.xp_gained > 0 && (
+              <div className="p-4 bg-gradient-to-r from-emerald-50 to-blue-50 border-t border-emerald-200">
+                <div className="text-center mb-4">
+                  <div className="inline-flex items-center justify-center w-12 h-12 bg-emerald-100 rounded-full mb-2 animate-bounce-in">
+                    <Trophy className="w-6 h-6 text-emerald-600" />
+                  </div>
+                  <h3 className="text-lg font-bold text-emerald-800 animate-fade-in">
+                    Problem Solved!
+                  </h3>
+                  <div className="text-2xl font-bold text-emerald-600 animate-pulse">
+                    +{result.progress.xp_gained} XP
+                  </div>
+                </div>
+
+                {/* XP Breakdown */}
+                {result.progress.xp_breakdown && (
+                  <div className="bg-white rounded-lg p-3 mb-3 text-sm">
+                    <div className="font-medium text-gray-900 mb-2">XP Breakdown:</div>
+                    <div className="space-y-1 text-gray-600">
+                      <div className="flex justify-between">
+                        <span>Base XP:</span>
+                        <span className="font-medium">+{result.progress.xp_breakdown.base_xp}</span>
+                      </div>
+                      {result.progress.xp_breakdown.efficiency_bonus > 0 && (
+                        <div className="flex justify-between text-emerald-600">
+                          <span>Efficiency Bonus:</span>
+                          <span className="font-medium">+{result.progress.xp_breakdown.efficiency_bonus}</span>
+                        </div>
+                      )}
+                      {result.progress.xp_breakdown.hint_penalty > 0 && (
+                        <div className="flex justify-between text-amber-600">
+                          <span>Hint Penalty:</span>
+                          <span className="font-medium">-{result.progress.xp_breakdown.hint_penalty}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Updated Stats */}
+                {result.progress.updated_stats && (
+                  <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                    <div className="bg-white rounded-lg p-2">
+                      <div className="text-gray-500">Total XP</div>
+                      <div className="font-bold text-blue-600">
+                        {result.progress.updated_stats.total_xp}
+                      </div>
+                    </div>
+                    <div className="bg-white rounded-lg p-2">
+                      <div className="text-gray-500">Problems</div>
+                      <div className="font-bold text-emerald-600">
+                        {result.progress.updated_stats.total_problems}
+                      </div>
+                    </div>
+                    <div className="bg-white rounded-lg p-2">
+                      <div className="text-gray-500">Streak</div>
+                      <div className="font-bold text-orange-600">
+                        {result.progress.updated_stats.current_streak}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Achievement Notifications */}
+                {result.progress.new_achievements && result.progress.new_achievements.length > 0 && (
+                  <div className="mt-3 space-y-2">
+                    {result.progress.new_achievements.map((achievement, index) => (
+                      <div key={index} className="bg-amber-100 border border-amber-300 rounded-lg p-3 animate-slide-in-right">
+                        <div className="flex items-center">
+                          <Star className="w-5 h-5 text-amber-600 mr-2" />
+                          <div>
+                            <div className="font-bold text-amber-800">{achievement.title}</div>
+                            <div className="text-xs text-amber-700">{achievement.description}</div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Performance Metrics */}
             {result && (
               <div className="p-4 bg-gray-50">
@@ -75,8 +158,10 @@ export function OutputPanel({ result, onNextProblem, showNextButton }: OutputPan
                     </div>
                   </div>
                   <div>
-                    <div className="text-gray-500">Memory Usage</div>
-                    <div className="font-medium text-gray-900">2.1 MB</div>
+                    <div className="text-gray-500">Attempts</div>
+                    <div className="font-medium text-gray-900">
+                      {result.progress?.attempts || 1}
+                    </div>
                   </div>
                 </div>
               </div>
