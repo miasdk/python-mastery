@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { CheckCircle, Lock, Circle, Trophy, Star, Medal } from "lucide-react";
 import { Section, Achievement } from "@/types";
 import { Link, useLocation } from "wouter";
+import { calculateLevel } from "@/lib/level-system";
 
 interface SidebarProps {
   sections: Section[];

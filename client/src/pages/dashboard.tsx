@@ -1,11 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
 import { Sidebar } from "@/components/sidebar";
 import { ProgressOverview } from "@/components/progress-overview";
 import { DashboardData } from "@/types";
 import { Link } from "wouter";
-import { BookOpen, Code, Trophy, TrendingUp } from "lucide-react";
+import { BookOpen, Code, Trophy, TrendingUp, Star, Award } from "lucide-react";
+import { calculateLevel, getLevelBenefits, getNextLevelBenefits } from "@/lib/level-system";
 
 // Helper function to extract clean description for dashboard preview
 function getCleanDescription(description: string): string {
@@ -87,10 +89,20 @@ export default function Dashboard() {
                 <div className="text-sm text-gray-500">Problems Solved</div>
                 <div className="text-lg font-bold text-green-600">{dashboardData.stats.problems_solved}/60</div>
               </div>
-              <div className="text-right">
-                <div className="text-sm text-gray-500">Total XP</div>
-                <div className="text-lg font-bold text-blue-600">{dashboardData.stats.total_xp}</div>
-              </div>
+              {(() => {
+                const levelInfo = calculateLevel(dashboardData.stats.total_xp);
+                return (
+                  <div className="text-right">
+                    <div className="text-sm text-gray-500 flex items-center">
+                      <Star className="w-3 h-3 mr-1" />
+                      Level {levelInfo.level} {levelInfo.title}
+                    </div>
+                    <div className="text-lg font-bold text-blue-600">
+                      {levelInfo.currentXP}/{levelInfo.xpForNextLevel} XP
+                    </div>
+                  </div>
+                );
+              })()}
               <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
                 <span className="text-white font-medium">
                   {dashboardData.user.username.charAt(0).toUpperCase()}
@@ -138,17 +150,83 @@ export default function Dashboard() {
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total XP</CardTitle>
-                  <BookOpen className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-blue-600">{dashboardData.stats.total_xp}</div>
-                  <p className="text-xs text-muted-foreground">Experience points</p>
-                </CardContent>
-              </Card>
+              {(() => {
+                const levelInfo = calculateLevel(dashboardData.stats.total_xp);
+                return (
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Level Progress</CardTitle>
+                      <Star className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold text-blue-600">Level {levelInfo.level}</div>
+                      <p className="text-xs text-muted-foreground">{levelInfo.title}</p>
+                      <div className="mt-2">
+                        <Progress value={levelInfo.progressPercentage} className="h-2" />
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {levelInfo.currentXP}/{levelInfo.xpForNextLevel} XP to next level
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })()}
             </div>
+
+            {/* Level Benefits */}
+            {(() => {
+              const levelInfo = calculateLevel(dashboardData.stats.total_xp);
+              const currentBenefits = getLevelBenefits(levelInfo.level);
+              const nextBenefits = getNextLevelBenefits(levelInfo.level);
+              
+              return (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center">
+                        <Award className="w-5 h-5 mr-2 text-blue-600" />
+                        Level {levelInfo.level} Benefits
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-gray-600 mb-3">What you've unlocked:</p>
+                      <ul className="space-y-2">
+                        {currentBenefits.map((benefit, index) => (
+                          <li key={index} className="flex items-center">
+                            <div className="w-2 h-2 bg-green-500 rounded-full mr-3 flex-shrink-0"></div>
+                            <span className="text-sm">{benefit}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </CardContent>
+                  </Card>
+
+                  {levelInfo.level < 5 && (
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center">
+                          <Star className="w-5 h-5 mr-2 text-amber-500" />
+                          Next Level Rewards
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-sm text-gray-600 mb-3">
+                          {levelInfo.xpForNextLevel - levelInfo.currentXP} XP to unlock:
+                        </p>
+                        <ul className="space-y-2">
+                          {nextBenefits.map((benefit, index) => (
+                            <li key={index} className="flex items-center">
+                              <div className="w-2 h-2 bg-amber-500 rounded-full mr-3 flex-shrink-0"></div>
+                              <span className="text-sm">{benefit}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
+              );
+            })()}
 
             {/* Continue Learning */}
             {dashboardData.current_problem && (
@@ -169,7 +247,7 @@ export default function Dashboard() {
                           {dashboardData.current_problem.difficulty}
                         </span>
                         <span className="text-sm text-gray-500">
-                          +{dashboardData.current_problem.xpReward || dashboardData.current_problem.xp_reward || 50} XP
+                          +{dashboardData.current_problem.xp_reward || 50} XP
                         </span>
                       </div>
                     </div>
