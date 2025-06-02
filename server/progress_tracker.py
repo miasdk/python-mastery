@@ -27,8 +27,12 @@ class ProgressTracker:
             self.db.add(progress)
         
         # Update attempts
-        progress.attempts += 1
-        progress.last_attempt_at = datetime.utcnow()
+        new_attempts = progress.attempts + 1
+        self.db.execute(
+            update(UserProgress)
+            .where(UserProgress.id == progress.id)
+            .values(attempts=new_attempts, last_attempt_at=datetime.utcnow())
+        )
         
         xp_gained = 0
         xp_breakdown = {}
@@ -36,18 +40,27 @@ class ProgressTracker:
         
         # If correct and not previously completed
         if is_correct and not progress.is_completed:
-            progress.is_completed = True
-            progress.completed_at = datetime.utcnow()
-            
-            # Update best time
-            if not progress.best_time or execution_time < progress.best_time:
-                progress.best_time = execution_time
+            # Update progress to completed
+            self.db.execute(
+                update(UserProgress)
+                .where(UserProgress.id == progress.id)
+                .values(
+                    is_completed=True,
+                    completed_at=datetime.utcnow(),
+                    best_time=execution_time if not progress.best_time else min(progress.best_time, execution_time)
+                )
+            )
             
             # Update user stats
             user = self.db.query(User).filter(User.id == user_id).first()
             if user:
                 old_total_xp = user.total_xp
-                user.total_problems += 1
+                new_total_problems = user.total_problems + 1
+                self.db.execute(
+                    update(User)
+                    .where(User.id == user_id)
+                    .values(total_problems=new_total_problems)
+                )
                 
                 # Award XP (base 50 + bonus for efficiency)
                 base_xp = 50

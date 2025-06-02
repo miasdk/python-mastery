@@ -6,7 +6,7 @@ from .database import get_db
 from .models import User, Section, Lesson, Problem, UserProgress, CodeSubmission
 from .code_executor import SecureCodeExecutor
 from .curriculum import CurriculumGenerator
-from .progress_tracker import ProgressTracker
+from .progress_tracker_fixed import ProgressTracker
 from datetime import datetime
 
 router = APIRouter()
