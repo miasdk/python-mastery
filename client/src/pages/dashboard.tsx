@@ -168,7 +168,7 @@ export default function Dashboard() {
                           {dashboardData.current_problem.difficulty}
                         </span>
                         <span className="text-sm text-gray-500">
-                          +{dashboardData.current_problem.xp_reward || 50} XP
+                          +{dashboardData.current_problem.xpReward} XP
                         </span>
                       </div>
                     </div>
