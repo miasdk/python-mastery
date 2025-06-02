@@ -316,32 +316,22 @@ class CurriculumGenerator:
         return [
             {
                 "title": "Smart Calculator",
-                "description": "Create a calculator that handles basic arithmetic operations safely.",
+                "description": "**Smart Calculator**\n**Easy - Arithmetic Operations**\n\n**What You're Building:**\nCreate a calculator component for a mobile app. Handle basic math operations with error protection for invalid calculations.\n\n**Your Task:**\n- Calculate subtotal: item price × quantity\n- Calculate tax amount: subtotal × tax rate\n- Calculate total: subtotal + tax amount\n- Return subtotal, tax amount, and total\n\n**Skills Practiced:** Arithmetic Operations • Multiplication • Addition\n\n**Example:**\n```python\nsubtotal, tax, total = calculate_total(25.99, 2, 0.08)\nprint(f\"Total: ${total:.2f}\")  # Total: $56.13\n```",
                 "difficulty": "easy",
-                "starter_code": "def smart_calculator(a, b, operation):\n    # Perform the operation (+, -, *, /) on a and b\n    # Handle division by zero\n    if operation == '+':\n        return # Your code here\n    elif operation == '-':\n        return # Your code here\n    # Complete other operations\n    pass",
-                "solution": "def smart_calculator(a, b, operation):\n    if operation == '+':\n        return a + b\n    elif operation == '-':\n        return a - b\n    elif operation == '*':\n        return a * b\n    elif operation == '/' and b != 0:\n        return a / b\n    else:\n        return 'Error'",
+                "starter_code": "def calculate_total(item_price, quantity, tax_rate):\n    # Calculate shopping cart total with tax\n    subtotal = # Price times quantity\n    tax_amount = # Subtotal times tax rate\n    total = # Subtotal plus tax\n    return subtotal, tax_amount, total",
+                "solution": "def calculate_total(item_price, quantity, tax_rate):\n    subtotal = item_price * quantity\n    tax_amount = subtotal * tax_rate\n    total = subtotal + tax_amount\n    return subtotal, tax_amount, total",
                 "test_cases": [
                     {
-                        "function_name": "smart_calculator",
-                        "input": [15, 3, "+"],
-                        "expected": 18
-                    },
-                    {
-                        "function_name": "smart_calculator",
-                        "input": [20, 4, "/"],
-                        "expected": 5.0
-                    },
-                    {
-                        "function_name": "smart_calculator",
-                        "input": [10, 0, "/"],
-                        "expected": "Error"
+                        "function_name": "calculate_total",
+                        "input": [25.99, 2, 0.08],
+                        "expected": (51.98, 4.1584, 56.1384)
                     }
                 ],
                 "hints": [
-                    "Use if-elif statements to check the operation",
-                    "Check for division by zero before dividing",
-                    "Return 'Error' for invalid operations",
-                    "Remember that division returns float values"
+                    "Multiply price by quantity for subtotal",
+                    "Multiply subtotal by tax rate for tax amount",
+                    "Add subtotal and tax for final total",
+                    "Use parentheses to control calculation order"
                 ],
                 "xp_reward": 30
             },
