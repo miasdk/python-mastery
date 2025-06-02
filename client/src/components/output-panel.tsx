@@ -64,7 +64,7 @@ export function OutputPanel({ result, onNextProblem, showNextButton }: OutputPan
             </div>
 
             {/* XP Gains and Progress Updates */}
-            {result?.success && result?.progress?.xp_gained > 0 && (
+            {result?.success && result?.progress?.xp_gained && result.progress.xp_gained > 0 && (
               <div className="p-4 bg-gradient-to-r from-emerald-50 to-blue-50 border-t border-emerald-200">
                 <div className="text-center mb-4">
                   <div className="inline-flex items-center justify-center w-12 h-12 bg-emerald-100 rounded-full mb-2 animate-bounce-in">
@@ -74,12 +74,12 @@ export function OutputPanel({ result, onNextProblem, showNextButton }: OutputPan
                     Problem Solved!
                   </h3>
                   <div className="text-2xl font-bold text-emerald-600 animate-pulse">
-                    +{result.progress.xp_gained} XP
+                    +{result.progress?.xp_gained} XP
                   </div>
                 </div>
 
                 {/* XP Breakdown */}
-                {result.progress.xp_breakdown && (
+                {result.progress?.xp_breakdown && (
                   <div className="bg-white rounded-lg p-3 mb-3 text-sm">
                     <div className="font-medium text-gray-900 mb-2">XP Breakdown:</div>
                     <div className="space-y-1 text-gray-600">

@@ -48,79 +48,92 @@ export function ProblemDescription({ problem, onHintUsed }: ProblemDescriptionPr
       <div className="flex-1 overflow-y-auto p-6">
         <div className="prose prose-sm max-w-none">
           <h3 className="text-sm font-semibold text-gray-900 mb-3">Problem Statement</h3>
-          <div className="text-sm text-gray-700 mb-4 whitespace-pre-wrap">
-            {problem.description.split('\n').map((line, index) => {
-              // Handle bold text
-              if (line.startsWith('**') && line.endsWith('**')) {
-                const text = line.slice(2, -2);
-                return (
-                  <div key={index} className="font-semibold text-gray-900 mb-2">
-                    {text}
-                  </div>
-                );
-              }
+          <div className="text-sm text-gray-700 mb-4">
+            {(() => {
+              const lines = problem.description.split('\n');
+              const elements = [];
+              let inCodeBlock = false;
+              let codeBlockLines = [];
               
-              // Handle bullet points
-              if (line.startsWith('- ')) {
-                return (
-                  <div key={index} className="ml-4 mb-1">
-                    • {line.slice(2)}
-                  </div>
-                );
-              }
-              
-              // Handle code blocks
-              if (line.startsWith('```')) {
-                return null; // Skip opening/closing code block markers
-              }
-              
-              // Handle Skills Practiced section with dots
-              if (line.includes('Skills Practiced:')) {
-                const parts = line.split('Skills Practiced:');
-                if (parts.length === 2) {
-                  let skillsText = parts[1].trim();
-                  // Remove any leading ** formatting
-                  if (skillsText.startsWith('**')) {
-                    skillsText = skillsText.substring(2).trim();
-                  }
-                  const skills = skillsText.split(' • ');
-                  return (
-                    <div key={index} className="mb-2">
-                      <span className="font-medium text-gray-900">Skills Practiced: </span>
-                      <span className="text-gray-700">
-                        {skills.map((skill, skillIndex) => (
-                          <span key={skillIndex}>
-                            {skill.trim()}
-                            {skillIndex < skills.length - 1 && ' • '}
-                          </span>
+              for (let i = 0; i < lines.length; i++) {
+                const line = lines[i];
+                
+                // Handle code block start/end
+                if (line.startsWith('```')) {
+                  if (inCodeBlock) {
+                    // End of code block - render accumulated code
+                    elements.push(
+                      <div key={`code-${i}`} className="bg-gray-50 border border-gray-200 rounded-lg p-3 font-mono text-sm mb-3 overflow-x-auto">
+                        {codeBlockLines.map((codeLine, lineIndex) => (
+                          <div key={lineIndex} className="text-gray-800">
+                            {codeLine || '\u00A0'} {/* Non-breaking space for empty lines */}
+                          </div>
                         ))}
-                      </span>
+                      </div>
+                    );
+                    codeBlockLines = [];
+                    inCodeBlock = false;
+                  } else {
+                    // Start of code block
+                    inCodeBlock = true;
+                  }
+                  continue;
+                }
+                
+                // If we're in a code block, accumulate lines
+                if (inCodeBlock) {
+                  codeBlockLines.push(line);
+                  continue;
+                }
+                
+                // Handle bold text
+                if (line.startsWith('**') && line.endsWith('**') && line.length > 4) {
+                  const text = line.slice(2, -2);
+                  elements.push(
+                    <div key={i} className="font-semibold text-gray-900 mb-2 text-base">
+                      {text}
                     </div>
                   );
+                  continue;
                 }
-              }
-              
-              // Handle code content (lines between code blocks)
-              if (line.startsWith('print(') || line.startsWith('total =') || line.includes('f"') || line.includes('# ')) {
-                return (
-                  <div key={index} className="font-mono text-xs bg-gray-100 px-2 py-1 rounded mb-1">
+                
+                // Handle bullet points
+                if (line.startsWith('- ')) {
+                  elements.push(
+                    <div key={i} className="ml-4 mb-1 flex items-start">
+                      <span className="text-gray-500 mr-2">•</span>
+                      <span>{line.slice(2)}</span>
+                    </div>
+                  );
+                  continue;
+                }
+                
+                // Handle section headers (Description:, Example:, etc.)
+                if (line.includes(':') && (line.includes('Description') || line.includes('Example') || line.includes('Skills'))) {
+                  elements.push(
+                    <div key={i} className="font-medium text-gray-900 mb-2 mt-3">
+                      {line}
+                    </div>
+                  );
+                  continue;
+                }
+                
+                // Handle empty lines
+                if (line.trim() === '') {
+                  elements.push(<div key={i} className="mb-2" />);
+                  continue;
+                }
+                
+                // Regular text
+                elements.push(
+                  <div key={i} className="mb-1 leading-relaxed">
                     {line}
                   </div>
                 );
               }
               
-              // Handle empty lines
-              if (line.trim() === '') {
-                return <div key={index} className="mb-2" />;
-              }
-              
-              // Regular text
-              return (
-                <div key={index} className="mb-1">
-                  {line}
-                </div>
-              );
-            })}
+              return elements;
+            })()}
           </div>
 
           {/* Example section if present in description */}
