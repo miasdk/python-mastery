@@ -57,6 +57,27 @@ export function Sidebar({ sections, currentProblemId, stats, achievements }: Sid
           </div>
         </div>
 
+        {/* Level Display */}
+        {(() => {
+          const levelInfo = calculateLevel(stats.total_xp);
+          return (
+            <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center">
+                  <Star className="w-4 h-4 text-blue-600 mr-1" />
+                  <span className="text-sm font-medium text-blue-900">
+                    Level {levelInfo.level} {levelInfo.title}
+                  </span>
+                </div>
+                <span className="text-xs text-blue-700">
+                  {levelInfo.currentXP}/{levelInfo.xpForNextLevel} XP
+                </span>
+              </div>
+              <Progress value={levelInfo.progressPercentage} className="h-1.5" />
+            </div>
+          );
+        })()}
+
         {/* Achievement Badges */}
         <div className="mt-4">
           <div className="text-xs font-medium text-gray-700 mb-2">Recent Achievements</div>
