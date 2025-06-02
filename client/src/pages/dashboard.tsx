@@ -7,6 +7,39 @@ import { DashboardData } from "@/types";
 import { Link } from "wouter";
 import { BookOpen, Code, Trophy, TrendingUp } from "lucide-react";
 
+// Helper function to extract clean description for dashboard preview
+function getCleanDescription(description: string): string {
+  const lines = description.split('\n');
+  
+  // Find the "What You're Building:" line and return the next non-empty line
+  for (let i = 0; i < lines.length; i++) {
+    if (lines[i].includes("What You're Building:")) {
+      for (let j = i + 1; j < lines.length; j++) {
+        const cleanLine = lines[j].trim();
+        if (cleanLine && !cleanLine.startsWith('**') && !cleanLine.startsWith('-')) {
+          return cleanLine.length > 80 ? cleanLine.slice(0, 80) + '...' : cleanLine;
+        }
+      }
+    }
+  }
+  
+  // Fallback: find first meaningful line that's not formatting
+  const meaningfulLine = lines.find(line => {
+    const clean = line.trim();
+    return clean && 
+           !clean.startsWith('**') && 
+           !clean.startsWith('-') && 
+           !clean.startsWith('```') &&
+           clean.length > 10;
+  });
+  
+  if (meaningfulLine) {
+    return meaningfulLine.length > 80 ? meaningfulLine.slice(0, 80) + '...' : meaningfulLine;
+  }
+  
+  return "Continue with your next coding challenge";
+}
+
 export default function Dashboard() {
   // Mock user ID - in a real app, this would come from authentication
   const userId = 1;
@@ -138,7 +171,7 @@ export default function Dashboard() {
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="font-semibold text-lg">{dashboardData.current_problem.title}</h3>
-                      <p className="text-gray-600">{dashboardData.current_problem.description.slice(0, 100)}...</p>
+                      <p className="text-gray-600">{getCleanDescription(dashboardData.current_problem.description)}</p>
                       <div className="flex items-center mt-2 space-x-4">
                         <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm">
                           {dashboardData.current_problem.difficulty}
