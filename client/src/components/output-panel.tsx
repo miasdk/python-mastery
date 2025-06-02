@@ -1,0 +1,150 @@
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { CheckCircle, XCircle, Clock, ArrowRight } from "lucide-react";
+import { CodeExecutionResult } from "@/types";
+
+interface OutputPanelProps {
+  result?: CodeExecutionResult;
+  onNextProblem: () => void;
+  showNextButton: boolean;
+}
+
+export function OutputPanel({ result, onNextProblem, showNextButton }: OutputPanelProps) {
+  return (
+    <div className="w-96 bg-white border-l border-gray-200 flex flex-col">
+      <Tabs defaultValue="output" className="flex-1 flex flex-col">
+        {/* Tab Navigation */}
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="output" className="flex items-center">
+            <i className="fas fa-terminal mr-2 text-xs"></i>
+            Output
+          </TabsTrigger>
+          <TabsTrigger value="tests" className="flex items-center">
+            <CheckCircle className="w-3 h-3 mr-2" />
+            Tests
+          </TabsTrigger>
+        </TabsList>
+
+        {/* Tab Content */}
+        <div className="flex-1 overflow-hidden">
+          <TabsContent value="output" className="h-full overflow-y-auto m-0">
+            <div className="p-4 border-b border-gray-100">
+              <h4 className="text-sm font-semibold text-gray-900 mb-3">Console Output</h4>
+              <Card className="bg-gray-900 text-white">
+                <CardContent className="p-3 font-mono text-sm">
+                  {result ? (
+                    <div className="space-y-1">
+                      {result.output && (
+                        <div className="text-gray-300">{result.output}</div>
+                      )}
+                      {result.success ? (
+                        <div className="text-emerald-400">✓ All tests passed!</div>
+                      ) : (
+                        <div className="text-red-400">
+                          {result.error || '✗ Some tests failed'}
+                        </div>
+                      )}
+                      {result.execution_time && (
+                        <div className="text-gray-400 text-xs">
+                          Execution time: {result.execution_time}ms
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="text-gray-500">
+                      Click "Run Code" to see output...
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Performance Metrics */}
+            {result && (
+              <div className="p-4 bg-gray-50">
+                <h4 className="text-sm font-semibold text-gray-900 mb-3">Performance</h4>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <div className="text-gray-500">Execution Time</div>
+                    <div className="font-medium text-gray-900">
+                      {result.execution_time ? `${result.execution_time}ms` : 'N/A'}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-gray-500">Memory Usage</div>
+                    <div className="font-medium text-gray-900">2.1 MB</div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="tests" className="h-full overflow-y-auto m-0">
+            <div className="p-4">
+              <h4 className="text-sm font-semibold text-gray-900 mb-3">Test Cases</h4>
+              
+              {result?.test_results ? (
+                <div className="space-y-3">
+                  {result.test_results.map((test, index) => (
+                    <Card 
+                      key={index}
+                      className={`${
+                        test.passed 
+                          ? 'bg-emerald-50 border-emerald-200' 
+                          : 'bg-red-50 border-red-200'
+                      }`}
+                    >
+                      <CardContent className="p-3">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className={`text-sm font-medium ${
+                            test.passed ? 'text-emerald-800' : 'text-red-800'
+                          }`}>
+                            Test Case {test.test_case}
+                          </span>
+                          {test.passed ? (
+                            <CheckCircle className="w-4 h-4 text-emerald-600" />
+                          ) : (
+                            <XCircle className="w-4 h-4 text-red-600" />
+                          )}
+                        </div>
+                        <div className={`text-xs space-y-1 ${
+                          test.passed ? 'text-emerald-700' : 'text-red-700'
+                        }`}>
+                          <div>Input: {JSON.stringify(test.input)}</div>
+                          <div>Expected: {JSON.stringify(test.expected)}</div>
+                          <div>Got: {JSON.stringify(test.actual)}</div>
+                          {test.error && (
+                            <div className="text-red-600 font-medium">Error: {test.error}</div>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center text-gray-500 py-8">
+                  Run your code to see test results
+                </div>
+              )}
+            </div>
+          </TabsContent>
+        </div>
+      </Tabs>
+
+      {/* Action Buttons */}
+      {showNextButton && (
+        <div className="border-t border-gray-200 p-4">
+          <Button
+            onClick={onNextProblem}
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+          >
+            Next Problem
+            <ArrowRight className="w-4 h-4 ml-2" />
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+}
