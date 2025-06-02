@@ -648,8 +648,100 @@ ${friendlyExplanation ? 'Try the suggestion above and submit again!' : 'Fix the 
             })
             .where(eq(schema.users.id, user_id || 1));
 
-          // Check for achievements
+          // Check for section completion and achievements
           const achievements = [];
+          
+          // Check if this problem completion finished a section
+          const currentProblem = problem[0];
+          if (currentProblem) {
+            // Get the lesson and section for this problem
+            const lessonData = await database
+              .select()
+              .from(schema.lessons)
+              .where(eq(schema.lessons.id, currentProblem.lessonId))
+              .limit(1);
+              
+            if (lessonData.length > 0) {
+              const currentLesson = lessonData[0];
+              
+              // Get all problems in this lesson
+              const lessonProblems = await database
+                .select()
+                .from(schema.problems)
+                .where(eq(schema.problems.lessonId, currentLesson.id));
+              
+              // Check if all problems in this lesson are now completed
+              const completedProblemsInLesson = await database
+                .select()
+                .from(schema.userProgress)
+                .where(and(
+                  eq(schema.userProgress.userId, user_id || 1),
+                  eq(schema.userProgress.isCompleted, true)
+                ))
+                .innerJoin(schema.problems, eq(schema.problems.id, schema.userProgress.problemId))
+                .where(eq(schema.problems.lessonId, currentLesson.id));
+              
+              if (completedProblemsInLesson.length === lessonProblems.length) {
+                achievements.push({
+                  type: "lesson_completed",
+                  title: `${currentLesson.title} Complete!`,
+                  description: `You've mastered ${currentLesson.title}. Ready for the next challenge?`,
+                  icon: "fas fa-graduation-cap"
+                });
+                
+                // Check if this was the last lesson in a section
+                const sectionData = await database
+                  .select()
+                  .from(schema.sections)
+                  .where(eq(schema.sections.id, currentLesson.sectionId))
+                  .limit(1);
+                  
+                if (sectionData.length > 0) {
+                  const currentSection = sectionData[0];
+                  
+                  // Get all lessons in this section
+                  const sectionLessons = await database
+                    .select()
+                    .from(schema.lessons)
+                    .where(eq(schema.lessons.sectionId, currentSection.id));
+                  
+                  // Check completed lessons in this section
+                  const completedLessonsInSection = [];
+                  for (const lesson of sectionLessons) {
+                    const lessonProbs = await database
+                      .select()
+                      .from(schema.problems)
+                      .where(eq(schema.problems.lessonId, lesson.id));
+                    
+                    const completedInThisLesson = await database
+                      .select()
+                      .from(schema.userProgress)
+                      .where(and(
+                        eq(schema.userProgress.userId, user_id || 1),
+                        eq(schema.userProgress.isCompleted, true)
+                      ))
+                      .innerJoin(schema.problems, eq(schema.problems.id, schema.userProgress.problemId))
+                      .where(eq(schema.problems.lessonId, lesson.id));
+                    
+                    if (completedInThisLesson.length === lessonProbs.length) {
+                      completedLessonsInSection.push(lesson);
+                    }
+                  }
+                  
+                  if (completedLessonsInSection.length === sectionLessons.length) {
+                    achievements.push({
+                      type: "section_completed",
+                      title: `🎉 ${currentSection.title} Section Complete!`,
+                      description: `Outstanding! You've conquered the entire ${currentSection.title} section. Your Python skills are growing stronger!`,
+                      icon: "fas fa-star"
+                    });
+                  }
+                }
+              }
+            }
+          }
+          
+          // Other achievements
           if (newTotalProblems === 10) {
             achievements.push({
               type: "problems_solved",
