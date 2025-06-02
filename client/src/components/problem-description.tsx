@@ -74,6 +74,27 @@ export function ProblemDescription({ problem, onHintUsed }: ProblemDescriptionPr
                 return null; // Skip opening/closing code block markers
               }
               
+              // Handle Skills Practiced section with dots
+              if (line.includes('Skills Practiced:')) {
+                const parts = line.split('Skills Practiced:');
+                if (parts.length === 2) {
+                  const skills = parts[1].trim().split(' • ');
+                  return (
+                    <div key={index} className="mb-2">
+                      <span className="font-medium text-gray-900">Skills Practiced: </span>
+                      <span className="text-gray-700">
+                        {skills.map((skill, skillIndex) => (
+                          <span key={skillIndex}>
+                            {skill.trim()}
+                            {skillIndex < skills.length - 1 && ' • '}
+                          </span>
+                        ))}
+                      </span>
+                    </div>
+                  );
+                }
+              }
+              
               // Handle code content (lines between code blocks)
               if (line.startsWith('print(') || line.startsWith('total =') || line.includes('f"') || line.includes('# ')) {
                 return (
