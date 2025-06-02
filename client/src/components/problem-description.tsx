@@ -109,10 +109,10 @@ export function ProblemDescription({ problem, onHintUsed }: ProblemDescriptionPr
                 }
                 
                 // Handle section headers (Description:, Example:, etc.)
-                if (line.includes(':') && (line.includes('Description') || line.includes('Example') || line.includes('Skills'))) {
+                if (line.includes(':') && (line.includes('Description') || line.includes('Example') || line.includes('Skills') || line.includes('Objective'))) {
                   elements.push(
                     <div key={i} className="font-medium text-gray-900 mb-2 mt-3">
-                      {line}
+                      {line.replace(/^\*\*/, '').replace(/\*\*$/, '')}
                     </div>
                   );
                   continue;
