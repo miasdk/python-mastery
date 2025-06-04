@@ -5,7 +5,6 @@ import pkg from "pg";
 const { Pool } = pkg;
 import * as schema from "../shared/schema";
 import { eq, asc, desc, and, or, isNull } from "drizzle-orm";
-import { setupAuth, isAuthenticated } from "./auth";
 
 // Initialize database connection
 const pool = new Pool({
@@ -14,10 +13,61 @@ const pool = new Pool({
 const database = drizzle(pool, { schema });
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Get user dashboard
-  app.get("/api/dashboard/:userId", async (req, res) => {
+  // Create a default user for immediate deployment
+  const DEFAULT_USER_ID = "demo_user";
+  
+  // Ensure default user exists
+  const ensureDefaultUser = async () => {
+    const existing = await database
+      .select()
+      .from(schema.users)
+      .where(eq(schema.users.id, DEFAULT_USER_ID))
+      .limit(1);
+      
+    if (existing.length === 0) {
+      await database
+        .insert(schema.users)
+        .values({
+          id: DEFAULT_USER_ID,
+          username: "Demo User",
+          email: "demo@pythonmaster.dev",
+          firstName: "Demo",
+          lastName: "User",
+          currentStreak: 0,
+          totalProblems: 0,
+          totalXp: 0,
+          currentSection: 1,
+          currentLesson: 1,
+        });
+    }
+  };
+
+  await ensureDefaultUser();
+
+  // Simple auth endpoint that returns default user
+  app.get('/api/auth/user', async (req, res) => {
     try {
-      const userId = parseInt(req.params.userId);
+      const user = await database
+        .select()
+        .from(schema.users)
+        .where(eq(schema.users.id, DEFAULT_USER_ID))
+        .limit(1);
+      
+      if (user.length > 0) {
+        res.json(user[0]);
+      } else {
+        res.status(404).json({ error: "User not found" });
+      }
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+
+  // Get user dashboard
+  app.get("/api/dashboard", async (req, res) => {
+    try {
+      const userId = DEFAULT_USER_ID;
       
       // Get user
       const user = await database
