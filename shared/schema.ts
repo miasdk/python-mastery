@@ -60,7 +60,7 @@ export const problems = pgTable("problems", {
 
 export const userProgress = pgTable("user_progress", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull(),
+  userId: text("user_id").notNull(),     // ← Change from integer to text
   problemId: integer("problem_id").notNull(),
   isCompleted: boolean("is_completed").default(false).notNull(),
   attempts: integer("attempts").default(0).notNull(),
@@ -72,7 +72,7 @@ export const userProgress = pgTable("user_progress", {
 
 export const codeSubmissions = pgTable("code_submissions", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull(),
+  userId: text("user_id").notNull(),     // ← Change from integer to text
   problemId: integer("problem_id").notNull(),
   code: text("code").notNull(),
   isCorrect: boolean("is_correct").notNull(),
@@ -84,8 +84,8 @@ export const codeSubmissions = pgTable("code_submissions", {
 
 export const achievements = pgTable("achievements", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull(),
-  type: text("type").notNull(), // "streak", "problems_solved", "section_completed"
+  userId: text("user_id").notNull(),     // ← Change from integer to text
+  type: text("type").notNull(),
   title: text("title").notNull(),
   description: text("description").notNull(),
   icon: text("icon").notNull(),

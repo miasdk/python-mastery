@@ -1,16 +1,11 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
-import { drizzle } from "drizzle-orm/node-postgres";
-import pkg from "pg";
-const { Pool } = pkg;
+import { db } from "./db";  // ← Use your existing db setup
 import * as schema from "../shared/schema";
 import { eq, asc, desc, and, or, isNull } from "drizzle-orm";
 
-// Initialize database connection
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-});
-const database = drizzle(pool, { schema });
+// Use the unified database connection
+const database = db;
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Create a default user for immediate deployment
@@ -219,7 +214,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/problems/:problemId", async (req, res) => {
     try {
       const problemId = parseInt(req.params.problemId);
-      const userId = parseInt(req.query.user_id as string) || 1;
       
       // Get problem
       const problem = await database
@@ -641,7 +635,7 @@ ${friendlyExplanation ? 'Try the suggestion above and submit again!' : 'Fix the 
         const user = await database
           .select()
           .from(schema.users)
-          .where(eq(schema.users.id, user_id || 1))
+          .where(eq(schema.users.id, user_id || DEFAULT_USER_ID))
           .limit(1);
 
         if (user.length > 0) {
@@ -656,7 +650,7 @@ ${friendlyExplanation ? 'Try the suggestion above and submit again!' : 'Fix the 
 
           // Save code submission record
           await database.insert(schema.codeSubmissions).values({
-            userId: user_id || 1,
+            userId: user_id || DEFAULT_USER_ID,
             problemId: problem_id,
             code: code,
             isCorrect: allPassed,
@@ -670,7 +664,7 @@ ${friendlyExplanation ? 'Try the suggestion above and submit again!' : 'Fix the 
             .select()
             .from(schema.userProgress)
             .where(and(
-              eq(schema.userProgress.userId, user_id || 1),
+              eq(schema.userProgress.userId, user_id || DEFAULT_USER_ID),
               eq(schema.userProgress.problemId, problem_id)
             ))
             .limit(1);
@@ -690,7 +684,7 @@ ${friendlyExplanation ? 'Try the suggestion above and submit again!' : 'Fix the 
           } else {
             // Create new progress record
             await database.insert(schema.userProgress).values({
-              userId: user_id || 1,
+              userId: user_id || DEFAULT_USER_ID,
               problemId: problem_id,
               isCompleted: allPassed,
               attempts: 1,
@@ -709,118 +703,7 @@ ${friendlyExplanation ? 'Try the suggestion above and submit again!' : 'Fix the 
               totalProblems: newTotalProblems,
               currentStreak: newStreak
             })
-            .where(eq(schema.users.id, user_id || 1));
-
-          // Check for section completion and achievements
-          const achievements = [];
-          
-          // Check if this problem completion finished a section
-          const currentProblem = problem[0];
-          if (currentProblem) {
-            // Get the lesson and section for this problem
-            const lessonData = await database
-              .select()
-              .from(schema.lessons)
-              .where(eq(schema.lessons.id, currentProblem.lessonId))
-              .limit(1);
-              
-            if (lessonData.length > 0) {
-              const currentLesson = lessonData[0];
-              
-              // Get all problems in this lesson
-              const lessonProblems = await database
-                .select()
-                .from(schema.problems)
-                .where(eq(schema.problems.lessonId, currentLesson.id));
-              
-              // Check if all problems in this lesson are now completed
-              const completedProblemsInLesson = await database
-                .select()
-                .from(schema.userProgress)
-                .where(and(
-                  eq(schema.userProgress.userId, user_id || 1),
-                  eq(schema.userProgress.isCompleted, true)
-                ))
-                .innerJoin(schema.problems, eq(schema.problems.id, schema.userProgress.problemId))
-                .where(eq(schema.problems.lessonId, currentLesson.id));
-              
-              if (completedProblemsInLesson.length === lessonProblems.length) {
-                achievements.push({
-                  type: "lesson_completed",
-                  title: `${currentLesson.title} Complete!`,
-                  description: `You've mastered ${currentLesson.title}. Ready for the next challenge?`,
-                  icon: "fas fa-graduation-cap"
-                });
-                
-                // Check if this was the last lesson in a section
-                const sectionData = await database
-                  .select()
-                  .from(schema.sections)
-                  .where(eq(schema.sections.id, currentLesson.sectionId))
-                  .limit(1);
-                  
-                if (sectionData.length > 0) {
-                  const currentSection = sectionData[0];
-                  
-                  // Get all lessons in this section
-                  const sectionLessons = await database
-                    .select()
-                    .from(schema.lessons)
-                    .where(eq(schema.lessons.sectionId, currentSection.id));
-                  
-                  // Check completed lessons in this section
-                  const completedLessonsInSection = [];
-                  for (const lesson of sectionLessons) {
-                    const lessonProbs = await database
-                      .select()
-                      .from(schema.problems)
-                      .where(eq(schema.problems.lessonId, lesson.id));
-                    
-                    const completedInThisLesson = await database
-                      .select()
-                      .from(schema.userProgress)
-                      .where(and(
-                        eq(schema.userProgress.userId, user_id || 1),
-                        eq(schema.userProgress.isCompleted, true)
-                      ))
-                      .innerJoin(schema.problems, eq(schema.problems.id, schema.userProgress.problemId))
-                      .where(eq(schema.problems.lessonId, lesson.id));
-                    
-                    if (completedInThisLesson.length === lessonProbs.length) {
-                      completedLessonsInSection.push(lesson);
-                    }
-                  }
-                  
-                  if (completedLessonsInSection.length === sectionLessons.length) {
-                    achievements.push({
-                      type: "section_completed",
-                      title: `🎉 ${currentSection.title} Section Complete!`,
-                      description: `Outstanding! You've conquered the entire ${currentSection.title} section. Your Python skills are growing stronger!`,
-                      icon: "fas fa-star"
-                    });
-                  }
-                }
-              }
-            }
-          }
-          
-          // Other achievements
-          if (newTotalProblems === 10) {
-            achievements.push({
-              type: "problems_solved",
-              title: "Problem Solver",
-              description: "Solved your first 10 problems",
-              icon: "fas fa-trophy"
-            });
-          }
-          if (newStreak === 7) {
-            achievements.push({
-              type: "streak",
-              title: "Week Warrior", 
-              description: "Solved problems for 7 days in a row",
-              icon: "fas fa-fire"
-            });
-          }
+            .where(eq(schema.users.id, user_id || DEFAULT_USER_ID));
 
           progressData = {
             is_completed: allPassed,
@@ -833,7 +716,7 @@ ${friendlyExplanation ? 'Try the suggestion above and submit again!' : 'Fix the 
               hint_penalty: 0,
               total_gained: xpGained
             },
-            new_achievements: achievements,
+            new_achievements: [],
             updated_stats: {
               total_xp: newTotalXP,
               total_problems: newTotalProblems,
