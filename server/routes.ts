@@ -5,6 +5,7 @@ import pkg from "pg";
 const { Pool } = pkg;
 import * as schema from "../shared/schema";
 import { eq, asc, desc, and, or, isNull } from "drizzle-orm";
+import { setupAuth, isAuthenticated } from "./auth";
 
 // Initialize database connection
 const pool = new Pool({
