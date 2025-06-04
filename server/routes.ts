@@ -44,9 +44,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   await ensureDefaultUser();
 
+  // Demo login route
+  app.get('/api/auth/demo-login', async (req, res) => {
+    try {
+      // Set session to indicate user is logged in
+      (req as any).session = (req as any).session || {};
+      (req as any).session.userId = DEFAULT_USER_ID;
+      res.redirect('/');
+    } catch (error) {
+      console.error("Demo login error:", error);
+      res.status(500).json({ error: "Login failed" });
+    }
+  });
+
   // Simple auth endpoint that returns default user
   app.get('/api/auth/user', async (req, res) => {
     try {
+      // Check if user is logged in via session
+      const sessionUserId = (req as any).session?.userId;
+      if (!sessionUserId) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+
       const user = await database
         .select()
         .from(schema.users)
