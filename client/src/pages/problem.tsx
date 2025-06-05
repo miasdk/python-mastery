@@ -5,6 +5,7 @@ import { Sidebar } from "@/components/sidebar";
 import { ProblemDescription } from "@/components/problem-description";
 import { CodeEditor } from "@/components/code-editor";
 import { OutputPanel } from "@/components/output-panel";
+import { UserMenu } from "@/components/user-menu"; // Import UserMenu
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Clock, ChevronLeft } from "lucide-react";
@@ -17,9 +18,6 @@ export default function Problem() {
   const problemId = params?.id ? parseInt(params.id) : null;
   const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
-  
-  // Mock user ID - in a real app, this would come from authentication
-  const userId = 1;
   
   const [code, setCode] = useState("");
   const [executionResult, setExecutionResult] = useState<CodeExecutionResult | undefined>();
@@ -35,15 +33,23 @@ export default function Problem() {
     return () => clearInterval(timer);
   }, [startTime]);
 
+  // Define a type for the user object
+  type User = { id: string } | null;
+
+  // Fetch current user data (ADDED!)
+  const { data: user } = useQuery<User>({
+    queryKey: ['/api/auth/user'],
+  });
+
   // Fetch problem details
   const { data: problem, isLoading: problemLoading } = useQuery<ProblemDetail>({
-    queryKey: [`/api/problems/${problemId}?user_id=${userId}`],
+    queryKey: [`/api/problems/${problemId}`],
     enabled: !!problemId,
   });
 
   // Fetch dashboard data for sidebar
   const { data: dashboardData } = useQuery<DashboardData>({
-    queryKey: [`/api/dashboard/${userId}`],
+    queryKey: ['/api/dashboard'],
   });
 
   // Reset state when problem ID changes
@@ -72,6 +78,7 @@ export default function Problem() {
     },
     onSuccess: (result) => {
       setExecutionResult(result);
+      console.log("Code execution result:", result);
     },
     onError: (error) => {
       console.error("Execution error:", error);
@@ -93,20 +100,20 @@ export default function Problem() {
       const response = await apiRequest("POST", "/api/submit-solution", {
         problem_id: problemId,
         code,
-        user_id: userId
+        user_id: user?.id || "demo_user" // Use actual user ID if available
       });
       return response.json();
     },
     onSuccess: (result) => {
+      console.log("Submission result:", result);
       setExecutionResult(result);
       
-      // Invalidate dashboard data to update progress
-      queryClient.invalidateQueries({ queryKey: [`/api/dashboard/${userId}`] });
+      // Invalidate dashboard data to refresh progress
+      queryClient.invalidateQueries({ queryKey: ['/api/dashboard'] });
       
       // Show success notification if completed
       if (result.success && result.progress?.is_completed) {
-        // In a real app, you'd show a toast notification here
-        console.log("Problem completed successfully!");
+        console.log("Problem completed successfully! XP gained:", result.progress?.xp_gained);
       }
     },
     onError: (error) => {
@@ -119,16 +126,20 @@ export default function Problem() {
     mutationFn: async () => {
       if (!problemId) throw new Error("No problem ID");
       
-      const response = await apiRequest("POST", `/api/hint-used/${problemId}?user_id=${userId}`, {});
+      const response = await apiRequest("POST", `/api/hint-used/${problemId}`, {
+        user_id: user?.id || "demo_user"
+      });
       return response.json();
     },
   });
 
   const handleRunCode = () => {
+    console.log("Running code...");
     executeMutation.mutate(code);
   };
 
   const handleSubmitSolution = () => {
+    console.log("Submitting solution...");
     submitMutation.mutate(code);
   };
 
@@ -226,10 +237,8 @@ export default function Problem() {
                 <span>{formatTime(timeElapsed)}</span>
               </div>
               
-              {/* User Menu */}
-              <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
-                <span className="text-white text-sm font-medium">U</span>
-              </div>
+              {/* User Menu - UPDATED! */}
+              <UserMenu user={user} size="sm" />
             </div>
           </div>
         </div>

@@ -1,12 +1,30 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Code, Zap, Trophy, Target, BookOpen, Briefcase } from "lucide-react";
+import { Code, Zap, Trophy, Target, BookOpen, Briefcase, Github } from "lucide-react";
+import { useEffect, useState } from "react";
 
 export default function Landing() {
-  const handleLogin = () => {
-    // Simulate immediate login for demo purposes
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Check for OAuth error in URL params
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('error') === 'oauth_failed') {
+      setError('GitHub OAuth failed. Please try again.');
+    }
+  }, []);
+
+  const handleDemoLogin = () => {
+    console.log('🎭 Starting demo login...');
     window.location.href = "/api/auth/demo-login";
+  };
+
+  const handleGitHubLogin = () => {
+    console.log('🚀 Starting GitHub OAuth...');
+    // Clear any previous errors
+    setError(null);
+    window.location.href = '/api/auth/github';
   };
 
   const features = [
@@ -66,19 +84,31 @@ export default function Landing() {
             with interactive coding challenges designed for workplace readiness.
           </p>
           
+          {/* Error message */}
+          {error && (
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6 max-w-md mx-auto">
+              {error}
+            </div>
+          )}
+          
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
             <Button 
-              onClick={handleLogin}
+              onClick={handleDemoLogin}
               size="lg" 
               className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 text-lg"
             >
               Start Learning Python
             </Button>
-            <div className="flex items-center gap-2 text-sm text-gray-500">
-              <Badge variant="secondary">Free Demo Available</Badge>
-              <span>•</span>
-              <span>No Credit Card Required</span>
-            </div>
+            
+            <Button 
+              onClick={handleGitHubLogin}
+              size="lg" 
+              variant="outline"
+              className="border-gray-800 text-gray-800 hover:bg-gray-800 hover:text-white px-8 py-3 text-lg flex items-center gap-2"
+            >
+              <Github className="w-5 h-5" />
+              Continue with GitHub
+            </Button>
           </div>
         </div>
 
@@ -127,7 +157,7 @@ export default function Landing() {
             Join thousands of developers who have advanced their careers with our proven curriculum
           </p>
           <Button 
-            onClick={handleLogin}
+            onClick={handleDemoLogin}
             size="lg" 
             variant="secondary"
             className="bg-white text-blue-600 hover:bg-gray-100 px-8 py-3 text-lg"

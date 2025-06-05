@@ -1,17 +1,110 @@
+// Load environment variables FIRST before any other imports
+import dotenv from 'dotenv';
+dotenv.config();
+
+import passport from 'passport';
+import { Strategy as GitHubStrategy } from 'passport-github2';
 import type { Express } from "express";
 import { createServer, type Server } from "http";
-import { db } from "./db";  // ← Use your existing db setup
+import { db } from "./db";
 import * as schema from "../shared/schema";
 import { eq, asc, desc, and, or, isNull } from "drizzle-orm";
 
-// Use the unified database connection
 const database = db;
 
+// Validate required environment variables
+if (!process.env.GITHUB_CLIENT_ID) {
+  throw new Error('GITHUB_CLIENT_ID environment variable is required');
+}
+if (!process.env.GITHUB_CLIENT_SECRET) {
+  throw new Error('GITHUB_CLIENT_SECRET environment variable is required');
+}
+
+// Configure GitHub OAuth strategy
+passport.use(new GitHubStrategy({
+  clientID: process.env.GITHUB_CLIENT_ID!,
+  clientSecret: process.env.GITHUB_CLIENT_SECRET!,
+  callbackURL: "http://localhost:3000/api/auth/github/callback"
+}, async (accessToken: string, refreshToken: string, profile: any, done: any) => {
+  try {
+    console.log('🔐 GitHub OAuth callback received for user:', profile.username);
+    const githubUserId = `github_${profile.id}`;
+    
+    const existingUser = await database
+      .select()
+      .from(schema.users)
+      .where(eq(schema.users.id, githubUserId))
+      .limit(1);
+    
+    if (existingUser.length > 0) {
+      console.log('✅ Existing user found:', existingUser[0].username);
+      return done(null, existingUser[0]);
+    }
+    
+    console.log('👤 Creating new user from GitHub profile');
+    const newUser = await database
+      .insert(schema.users)
+      .values({
+        id: githubUserId,
+        username: profile.displayName || profile.username || 'GitHub User',
+        email: profile.emails?.[0]?.value || '',
+        firstName: profile.name?.givenName || '',
+        lastName: profile.name?.familyName || '',
+        profileImageUrl: profile.photos?.[0]?.value || '',
+        currentStreak: 0,
+        totalProblems: 0,
+        totalXp: 0,
+        currentSection: 1,
+        currentLesson: 1,
+      })
+      .returning();
+    
+    console.log('✅ New user created:', newUser[0].username);
+    return done(null, newUser[0]);
+  } catch (error) {
+    console.error('❌ GitHub OAuth error:', error);
+    return done(error, null);
+  }
+}));
+
+passport.serializeUser((user: any, done) => {
+  console.log('🔄 Serializing user:', user.id);
+  done(null, user.id);
+});
+
+passport.deserializeUser(async (id: string, done) => {
+  try {
+    console.log('🔄 Deserializing user:', id);
+    const user = await database
+      .select()
+      .from(schema.users)
+      .where(eq(schema.users.id, id))
+      .limit(1);
+    
+    if (user.length > 0) {
+      done(null, user[0]);
+    } else {
+      console.log('❌ User not found during deserialization:', id);
+      done(null, false);
+    }
+  } catch (error) {
+    console.error('❌ Deserialization error:', error);
+    done(error, null);
+  }
+});
+
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Create a default user for immediate deployment
+  app.use(passport.initialize());
+  app.use(passport.session());
+
+  // Add debugging info
+  console.log('🔧 GitHub OAuth Configuration:');
+  console.log('Client ID:', process.env.GITHUB_CLIENT_ID ? 'Set ✅' : 'Missing ❌');
+  console.log('Client Secret:', process.env.GITHUB_CLIENT_SECRET ? 'Set ✅' : 'Missing ❌');
+  console.log('Callback URL: http://localhost:3000/api/auth/github/callback');
+
   const DEFAULT_USER_ID = "demo_user";
   
-  // Ensure default user exists
   const ensureDefaultUser = async () => {
     const existing = await database
       .select()
@@ -39,23 +132,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   await ensureDefaultUser();
 
+  // ===============================
+  // AUTH ROUTES
+  // ===============================
+
   // Demo login route
   app.get('/api/auth/demo-login', async (req, res) => {
     try {
-      // Set session to indicate user is logged in
+      console.log('🎭 Demo login requested');
       (req as any).session = (req as any).session || {};
       (req as any).session.userId = DEFAULT_USER_ID;
       res.redirect('/');
     } catch (error) {
-      console.error("Demo login error:", error);
+      console.error("❌ Demo login error:", error);
       res.status(500).json({ error: "Login failed" });
     }
   });
 
-  // Simple auth endpoint that returns default user
+  // Auth user endpoint
   app.get('/api/auth/user', async (req, res) => {
     try {
-      // Check if user is logged in via session
       const sessionUserId = (req as any).session?.userId;
       if (!sessionUserId) {
         return res.status(401).json({ error: "Not authenticated" });
@@ -64,7 +160,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = await database
         .select()
         .from(schema.users)
-        .where(eq(schema.users.id, DEFAULT_USER_ID))
+        .where(eq(schema.users.id, sessionUserId))
         .limit(1);
       
       if (user.length > 0) {
@@ -78,12 +174,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get user dashboard
+  // Logout route
+  app.post('/api/auth/logout', (req, res) => {
+    console.log('👋 Logout requested');
+    (req as any).session?.destroy((err: any) => {
+      if (err) {
+        console.error('❌ Logout error:', err);
+        return res.status(500).json({ error: 'Failed to logout' });
+      }
+      res.json({ success: true });
+    });
+  });
+
+  // GitHub OAuth routes
+  app.get('/api/auth/github', (req, res, next) => {
+    console.log('🚀 Starting GitHub OAuth flow');
+    passport.authenticate('github', { scope: ['user:email'] })(req, res, next);
+  });
+
+  app.get('/api/auth/github/callback', 
+    (req, res, next) => {
+      console.log('📥 GitHub OAuth callback received');
+      passport.authenticate('github', { 
+        failureRedirect: '/?error=oauth_failed',
+        failureMessage: true
+      })(req, res, next);
+    },
+    (req, res) => {
+      console.log('✅ GitHub OAuth successful, redirecting to dashboard');
+      (req as any).session.userId = (req.user as any).id;
+      res.redirect('/');
+    }
+  );
+
+  // ===============================
+  // DASHBOARD ROUTES
+  // ===============================
+
+  // Dashboard endpoint
   app.get("/api/dashboard", async (req, res) => {
     try {
-      const userId = DEFAULT_USER_ID;
+      // Use session user or default to demo user
+      const sessionUserId = (req as any).session?.userId;
+      const userId = sessionUserId || DEFAULT_USER_ID;
       
-      // Get user
       const user = await database
         .select()
         .from(schema.users)
@@ -96,31 +230,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const userData = user[0];
       
-      // Get sections
       const sections = await database
         .select()
         .from(schema.sections)
         .orderBy(asc(schema.sections.orderIndex));
       
-      // Get lessons
       const lessons = await database
         .select()
         .from(schema.lessons)
         .orderBy(asc(schema.lessons.orderIndex));
       
-      // Get problems
       const problems = await database
         .select()
         .from(schema.problems)
         .orderBy(asc(schema.problems.orderIndex));
       
-      // Get user progress
       const userProgress = await database
         .select()
         .from(schema.userProgress)
         .where(eq(schema.userProgress.userId, userId));
       
-      // Get achievements
       const achievements = await database
         .select()
         .from(schema.achievements)
@@ -128,7 +257,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .orderBy(desc(schema.achievements.earnedAt))
         .limit(5);
       
-      // Build sections with progress
       const sectionsWithProgress = sections.map(section => {
         const sectionLessons = lessons.filter(l => l.sectionId === section.id);
         const lessonsWithProgress = sectionLessons.map(lesson => {
@@ -161,28 +289,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
         };
       });
       
-      // Find current problem - get the first problem since progress was reset
-      let currentProblem = null;
-      const firstProblem = await database
-        .select()
-        .from(schema.problems)
-        .orderBy(asc(schema.problems.id))
-        .limit(1);
-        
-      if (firstProblem.length > 0) {
-        currentProblem = firstProblem[0];
-      }
+      // Find current problem - FIXED VERSION
+let currentProblem = null;
+
+// Get all problems ordered by lesson, then by problem ID
+const allProblemsOrdered = await database
+  .select({
+    id: schema.problems.id,
+    title: schema.problems.title,
+    description: schema.problems.description,
+    difficulty: schema.problems.difficulty,
+    orderIndex: schema.problems.orderIndex,
+    starterCode: schema.problems.starterCode,
+    hints: schema.problems.hints,
+    xpReward: schema.problems.xpReward,
+    testCases: schema.problems.testCases,
+    lessonId: schema.problems.lessonId
+  })
+  .from(schema.problems)
+  .innerJoin(schema.lessons, eq(schema.problems.lessonId, schema.lessons.id))
+  .orderBy(
+    asc(schema.lessons.orderIndex),  // Lesson order first
+    asc(schema.problems.id)          // Then problem ID
+  );
+
+// Add debug logging
+console.log("🔍 All problems in order:", allProblemsOrdered.map(p => ({ id: p.id, title: p.title.substring(0, 20) })));
+
+// Find first uncompleted problem
+for (const problem of allProblemsOrdered) {
+  const progress = userProgress.find(p => p.problemId === problem.id);
+  const isCompleted = progress?.isCompleted || false;
+  
+  console.log(`🔍 Problem ${problem.id}: ${isCompleted ? '✅' : '❌'} ${problem.title.substring(0, 30)}`);
+  
+  if (!isCompleted) {
+    currentProblem = problem;
+    console.log(`🎯 CURRENT PROBLEM SELECTED: ${problem.id} - ${problem.title}`);
+    break;
+  }
+}
+
+// Fallback to first problem if all completed
+if (!currentProblem && allProblemsOrdered.length > 0) {
+  currentProblem = allProblemsOrdered[0];
+  console.log("🔄 All problems completed, showing first problem");
+}
+
+console.log("📤 Returning current problem:", currentProblem?.id, currentProblem?.title);
       
-      // Calculate stats
-      const totalProblems = sectionsWithProgress.reduce((acc, section) => 
-        acc + section.lessons.reduce((lessonAcc, lesson) => lessonAcc + lesson.problems.length, 0), 0
-      );
+      const totalProblems = problems.length;
       const progressPercentage = totalProblems > 0 ? (userData.totalProblems / totalProblems) * 100 : 0;
       
       res.json({
         user: {
           id: userData.id,
           username: userData.username,
+          email: userData.email,
+          firstName: userData.firstName,
+          lastName: userData.lastName,
+          profileImageUrl: userData.profileImageUrl,
           current_streak: userData.currentStreak,
           total_problems: userData.totalProblems,
           total_xp: userData.totalXp,
@@ -210,12 +376,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get problem details
+  // ===============================
+  // PROBLEM ROUTES (ORIGINAL SYSTEM - SCHEMA CORRECTED)
+  // ===============================
+
+  // Get problem details - matches your original API (plural problems)
   app.get("/api/problems/:problemId", async (req, res) => {
     try {
       const problemId = parseInt(req.params.problemId);
+      const sessionUserId = (req as any).session?.userId;
+      const userId = sessionUserId || DEFAULT_USER_ID;
       
-      // Get problem
+      console.log(`🧩 Fetching problem ${problemId} for user ${userId}`);
+      
+      // Get problem using schema that matches your DB structure
       const problem = await database
         .select()
         .from(schema.problems)
@@ -228,18 +402,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const problemData = problem[0];
       
-      // Get lesson and section info for breadcrumb
+      // Get lesson info (using lessonId from problems table)
       const lesson = await database
         .select()
         .from(schema.lessons)
         .where(eq(schema.lessons.id, problemData.lessonId))
         .limit(1);
       
-      const section = await database
+      let section = null;
+      if (lesson.length > 0) {
+        const sectionResult = await database
+          .select()
+          .from(schema.sections)
+          .where(eq(schema.sections.id, lesson[0].sectionId))
+          .limit(1);
+        section = sectionResult.length > 0 ? sectionResult[0] : null;
+      }
+      
+      // Get user progress for this specific problem
+      const progress = await database
         .select()
-        .from(schema.sections)
-        .where(eq(schema.sections.id, lesson[0].sectionId))
+        .from(schema.userProgress)
+        .where(and(
+          eq(schema.userProgress.userId, userId),
+          eq(schema.userProgress.problemId, problemId)
+        ))
         .limit(1);
+      
+      const progressData = progress.length > 0 ? progress[0] : {
+        isCompleted: false,
+        attempts: 0,
+        bestTime: null,
+        hintsUsed: 0
+      };
       
       res.json({
         id: problemData.id,
@@ -252,14 +447,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         xp_reward: problemData.xpReward,
         test_cases: problemData.testCases,
         progress: {
-          is_completed: false,
-          attempts: 0,
-          best_time: null,
-          hints_used: 0
+          is_completed: progressData.isCompleted,
+          attempts: progressData.attempts,
+          best_time: progressData.bestTime,
+          hints_used: progressData.hintsUsed
         },
         breadcrumb: {
-          section: section[0].title,
-          lesson: lesson[0].title
+          section: section?.title || "Unknown Section",
+          lesson: lesson.length > 0 ? lesson[0].title : "Unknown Lesson"
         }
       });
     } catch (error) {
@@ -268,12 +463,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Execute code endpoint
+  // Execute code endpoint - your original implementation with schema fixes
   app.post("/api/execute-code", async (req, res) => {
     try {
       const { code, test_cases } = req.body;
       
-      // Check for Python syntax errors
+      // Your original validation logic
       const syntaxErrors = [] as string[];
       if (code.includes('let ')) {
         syntaxErrors.push("Python uses variable assignment without 'let' keyword. Use: name = \"value\"");
@@ -289,7 +484,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const hasReturn = code.includes('return');
       const hasValidPythonSyntax = syntaxErrors.length === 0;
       
-      // Enhanced validation for execute endpoint
+      // Enhanced validation for specific problems
       let contentValidation = true;
       let contentErrors = [];
       
@@ -320,14 +515,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const success = hasFunction && hasReturn && hasValidPythonSyntax && contentValidation;
       
-      // Simulate actual code execution output
+      // Your original output formatting
       let outputMessage = "";
       if (success) {
-        // Try to extract function name and simulate execution
         const functionMatch = code.match(/def\s+(\w+)/);
         const functionName = functionMatch ? functionMatch[1] : 'your_function';
         
-        // Extract actual values from the user's code for this specific problem
         let resultDisplay = "";
         if (functionName === 'create_business_card') {
           const nameMatch = code.match(/name\s*=\s*["']([^"']+)["']/);
@@ -344,8 +537,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           resultDisplay = `('${actualValues[0]}', ${actualValues[1]}, '${actualValues[2]}', '${actualValues[3]}')`;
         } else {
-          // For other problems, show expected result format
-          const expectedResult = test_cases[0]?.expected;
+          const expectedResult = test_cases?.[0]?.expected;
           if (Array.isArray(expectedResult)) {
             resultDisplay = `(${expectedResult.map(val => 
               typeof val === 'string' ? `'${val}'` : val
@@ -392,7 +584,7 @@ Fix the issues above and try again.`;
       const result = {
         success: success,
         execution_time: Math.floor(Math.random() * 100) + 50,
-        test_results: test_cases.map((testCase: any, index: number) => ({
+        test_results: (test_cases || []).map((testCase: any, index: number) => ({
           test_case: index + 1,
           passed: success,
           input: testCase.input,
@@ -417,12 +609,16 @@ Fix the issues above and try again.`;
     }
   });
 
-  // Submit solution endpoint
+  // Submit solution endpoint - your original implementation with corrected schema
   app.post("/api/submit-solution", async (req, res) => {
     try {
       const { problem_id, code, user_id } = req.body;
+      const sessionUserId = (req as any).session?.userId;
+      const actualUserId = user_id || sessionUserId || DEFAULT_USER_ID;
       
-      // Adaptive syntax error explainer
+      console.log(`🚀 Code submission for problem ${problem_id} by user ${actualUserId}`);
+      
+      // Your original validation logic
       const syntaxErrors = [] as string[];
       const friendlyErrors = [] as string[];
 
@@ -452,33 +648,13 @@ Fix the issues above and try again.`;
         friendlyErrors.push("I see you want to print something! In Python, we use print() instead of console.log or println");
       }
 
-      // Missing colon after function definition
-      const funcDefMatch = code.match(/def\s+\w+\([^)]*\)\s*\n/);
-      if (funcDefMatch && !funcDefMatch[0].includes(':')) {
-        syntaxErrors.push("Missing colon after function definition");
-        friendlyErrors.push("Don't forget the colon! Python function definitions need a ':' at the end: def my_function():");
-      }
-
       // Semicolon usage
       if (code.includes(';')) {
         syntaxErrors.push("Python doesn't require semicolons at the end of lines");
         friendlyErrors.push("No semicolons needed! Python is clean and simple - just end your lines naturally");
       }
-
-      // Incorrect string concatenation
-      if (code.includes(' + ') && code.includes('"') && !code.includes('f"')) {
-        const hasStringConcat = /["'][^"']*["']\s*\+\s*/.test(code);
-        if (hasStringConcat) {
-          friendlyErrors.push("For string formatting, try f-strings! Instead of \"Hello \" + name, use f\"Hello {name}\"");
-        }
-      }
-
-      // Missing return statement detection (for friendly errors)
-      if (!code.includes('return') && code.includes('def ')) {
-        friendlyErrors.push("Your function looks good, but don't forget to return something! Add: return your_result");
-      }
       
-      // Get the actual problem to determine what to validate
+      // Get the actual problem to determine validation rules
       const problem = await database
         .select()
         .from(schema.problems)
@@ -500,26 +676,26 @@ Fix the issues above and try again.`;
       let problemSpecificValidation = true;
       let validationErrors = [];
       
-      if (problemData.title === 'Personal Information Card') {
+      if (problemData.title === 'Digital Business Card Creator') {
         const nameMatch = code.match(/name\s*=\s*["']([^"']+)["']/);
-        const ageMatch = code.match(/age\s*=\s*(\d+)/);
-        const cityMatch = code.match(/city\s*=\s*["']([^"']+)["']/);
-        const professionMatch = code.match(/profession\s*=\s*["']([^"']+)["']/);
+        const titleMatch = code.match(/title\s*=\s*["']([^"']+)["']/);
+        const companyMatch = code.match(/company\s*=\s*["']([^"']+)["']/);
+        const emailMatch = code.match(/email\s*=\s*["']([^"']+)["']/);
         
         if (!nameMatch || nameMatch[1].trim() === '') {
           validationErrors.push('Name variable must be assigned a non-empty string value');
           problemSpecificValidation = false;
         }
-        if (!ageMatch || parseInt(ageMatch[1]) <= 0) {
-          validationErrors.push('Age variable must be assigned a positive number');
+        if (!titleMatch || titleMatch[1].trim() === '') {
+          validationErrors.push('Title variable must be assigned a non-empty string value');
           problemSpecificValidation = false;
         }
-        if (!cityMatch || cityMatch[1].trim() === '') {
-          validationErrors.push('City variable must be assigned a non-empty string value');
+        if (!companyMatch || companyMatch[1].trim() === '') {
+          validationErrors.push('Company variable must be assigned a non-empty string value');
           problemSpecificValidation = false;
         }
-        if (!professionMatch || professionMatch[1].trim() === '') {
-          validationErrors.push('Profession variable must be assigned a non-empty string value');
+        if (!emailMatch || emailMatch[1].trim() === '') {
+          validationErrors.push('Email variable must be assigned a non-empty string value');
           problemSpecificValidation = false;
         }
       }
@@ -558,11 +734,8 @@ Fix the issues above and try again.`;
       
       let outputMessage = "";
       if (allPassed) {
-        // Extract function name and get expected result for display
         const functionMatch = code.match(/def\s+(\w+)/);
         const functionName = functionMatch ? functionMatch[1] : 'your_function';
-        
-        // Get expected result from test case for display
         const expectedResult = testCases[0]?.expected;
         let displayResult = 'Success';
         
@@ -576,29 +749,13 @@ Fix the issues above and try again.`;
           }
         }
         
-        // Clean, minimal output format
         const functionCall = `${functionName}()`;
         const cleanResult = displayResult;
         
-        // Add practical usage example based on problem type
-        let usageExample = '';
-        const currentProblem = problem.length > 0 ? problem[0] : null;
-        const problemTitle = currentProblem ? currentProblem.title.toLowerCase() : '';
-        
-        if (problemTitle.includes('business card')) {
-          usageExample = `name, age, city, job = ${functionName}()\nprint(f"{name}, {age} years old from {city}")\nAlice Johnson, 25 years old from Boston`;
-        } else if (problemTitle.includes('temperature')) {
-          usageExample = `celsius, fahrenheit, kelvin = ${functionName}()\nprint(f"Room temperature: {celsius}°C / {fahrenheit}°F")\nRoom temperature: 22°C / 71.6°F`;
-        } else if (problemTitle.includes('calculator')) {
-          usageExample = `result = ${functionName}()\nprint(f"Calculation result: {result}")\nCalculation result: ${cleanResult}`;
-        } else {
-          usageExample = `result = ${functionName}()\nprint("Function completed successfully!")\nFunction completed successfully!`;
-        }
-
         outputMessage = `${functionCall}
 ${cleanResult}
 
-${usageExample}`;
+Function completed successfully!`;
       } else {
         const friendlyPart = friendlyExplanation ? `
 
@@ -614,63 +771,33 @@ ${!problemSpecificValidation ? '❌ Implementation incomplete' : '✅ Implementa
 ${friendlyExplanation ? 'Try the suggestion above and submit again!' : 'Fix the issues above and try submitting again.'}`;
       }
       
-      // Enhanced progress tracking with XP system
+      // Enhanced progress tracking with correct schema
       let progressData: any = {
         is_completed: allPassed,
         attempts: 1,
         best_time: allPassed ? executionTime : null,
         xp_gained: 0,
-        xp_breakdown: null,
         new_achievements: [],
         updated_stats: null
       };
 
       if (allPassed) {
-        // Use actual problem XP reward with small efficiency bonus
-        const baseXP = problemData.xpReward || 50;
-        const efficiencyBonus = Math.max(0, Math.floor(baseXP * 0.25) - (1 * 2)); // 25% bonus for first attempt, -2 per additional attempt
-        const xpGained = baseXP + efficiencyBonus;
+        try {
+          const baseXP = problemData.xpReward || 50;
+          const xpGained = baseXP;
 
-        // Get current user stats to update them
-        const user = await database
-          .select()
-          .from(schema.users)
-          .where(eq(schema.users.id, user_id || DEFAULT_USER_ID))
-          .limit(1);
-
-        if (user.length > 0) {
-          const currentUser = user[0];
-          const newTotalXP = currentUser.totalXp + xpGained;
-          const newTotalProblems = currentUser.totalProblems + 1;
-          
-          // Streak calculation: only increase if this is the first problem solved today
-          // For now, we'll keep the streak the same since we don't track daily completion dates
-          // In a real app, you'd check if user solved a problem today already
-          const newStreak = currentUser.currentStreak; // Don't auto-increment
-
-          // Save code submission record
-          await database.insert(schema.codeSubmissions).values({
-            userId: user_id || DEFAULT_USER_ID,
-            problemId: problem_id,
-            code: code,
-            isCorrect: allPassed,
-            executionTime: executionTime,
-            output: outputMessage,
-            error: allPassed ? null : errorMessage
-          });
-
-          // Check if user progress exists for this problem
+          // Check if user progress exists for this problem - CORRECTED SCHEMA
           const existingProgress = await database
             .select()
             .from(schema.userProgress)
             .where(and(
-              eq(schema.userProgress.userId, user_id || DEFAULT_USER_ID),
+              eq(schema.userProgress.userId, actualUserId),
               eq(schema.userProgress.problemId, problem_id)
             ))
             .limit(1);
 
           if (existingProgress.length > 0) {
-            // Update existing progress
+            // Update existing progress - CORRECTED FIELD NAMES
             await database
               .update(schema.userProgress)
               .set({
@@ -682,9 +809,9 @@ ${friendlyExplanation ? 'Try the suggestion above and submit again!' : 'Fix the 
               })
               .where(eq(schema.userProgress.id, existingProgress[0].id));
           } else {
-            // Create new progress record
+            // Create new progress record - CORRECTED FIELD NAMES
             await database.insert(schema.userProgress).values({
-              userId: user_id || DEFAULT_USER_ID,
+              userId: actualUserId,
               problemId: problem_id,
               isCompleted: allPassed,
               attempts: 1,
@@ -695,35 +822,71 @@ ${friendlyExplanation ? 'Try the suggestion above and submit again!' : 'Fix the 
             });
           }
 
-          // Update user stats in database
-          await database
-            .update(schema.users)
-            .set({
-              totalXp: newTotalXP,
-              totalProblems: newTotalProblems,
-              currentStreak: newStreak
-            })
-            .where(eq(schema.users.id, user_id || DEFAULT_USER_ID));
-
-          progressData = {
-            is_completed: allPassed,
-            attempts: 1,
-            best_time: executionTime,
-            xp_gained: xpGained,
-            xp_breakdown: {
-              base_xp: baseXP,
-              efficiency_bonus: efficiencyBonus,
-              hint_penalty: 0,
-              total_gained: xpGained
-            },
-            new_achievements: [],
-            updated_stats: {
-              total_xp: newTotalXP,
-              total_problems: newTotalProblems,
-              total_available_problems: 60,
-              current_streak: newStreak
+          // Save code submission record if table exists
+          try {
+            await database.insert(schema.codeSubmissions).values({
+              userId: actualUserId,
+              problemId: problem_id,
+              code: code,
+              isCorrect: allPassed,
+              executionTime: executionTime,
+              output: outputMessage,
+              error: allPassed ? null : errorMessage
+            });
+          } catch (codeSubmissionError) {
+            // Continue if codeSubmissions table doesn't exist
+            if (codeSubmissionError && typeof codeSubmissionError === 'object' && 'message' in codeSubmissionError) {
+              console.log('Code submissions table not available:', (codeSubmissionError as { message: string }).message);
+            } else {
+              console.log('Code submissions table not available:', codeSubmissionError);
             }
-          };
+          }
+
+          // Update user stats only for first-time completion
+          if (allPassed && existingProgress.length === 0) {
+            const user = await database
+              .select()
+              .from(schema.users)
+              .where(eq(schema.users.id, actualUserId))
+              .limit(1);
+              
+            if (user.length > 0) {
+              const currentUser = user[0];
+              const newTotalXP = currentUser.totalXp + xpGained;
+              const newTotalProblems = currentUser.totalProblems + 1;
+              
+              await database
+                .update(schema.users)
+                .set({
+                  totalXp: newTotalXP,
+                  totalProblems: newTotalProblems,
+                })
+                .where(eq(schema.users.id, actualUserId));
+
+              progressData = {
+                is_completed: allPassed,
+                attempts: 1,
+                best_time: executionTime,
+                xp_gained: xpGained,
+                xp_breakdown: {
+                  base_xp: baseXP,
+                  efficiency_bonus: 0,
+                  hint_penalty: 0,
+                  total_gained: xpGained
+                },
+                new_achievements: [],
+                updated_stats: {
+                  total_xp: newTotalXP,
+                  total_problems: newTotalProblems,
+                  total_available_problems: 60,
+                  current_streak: currentUser.currentStreak
+                }
+              };
+            }
+          }
+        } catch (dbError) {
+          console.error("Database update error:", dbError);
+          // Continue even if DB update fails
         }
       }
 
@@ -738,6 +901,30 @@ ${friendlyExplanation ? 'Try the suggestion above and submit again!' : 'Fix the 
     } catch (error) {
       console.error("Solution submission error:", error);
       res.status(500).json({ error: "Failed to submit solution" });
+    }
+  });
+
+  // Debug endpoint for troubleshooting
+  app.get('/api/debug', async (req, res) => {
+    try {
+      const sectionCount = await database.select().from(schema.sections);
+      const problemCount = await database.select().from(schema.problems);
+      const sessionUserId = (req as any).session?.userId;
+      
+      res.json({
+        sectionsFound: sectionCount.length,
+        problemsFound: problemCount.length,
+        sessionUserId: sessionUserId,
+        defaultUserId: DEFAULT_USER_ID,
+        environment: process.env.NODE_ENV,
+        databaseConnected: true
+      });
+    } catch (error) {
+      res.json({ 
+        error: error instanceof Error ? error.message : String(error), 
+        stack: error instanceof Error ? error.stack : undefined,
+        databaseConnected: false 
+      });
     }
   });
 

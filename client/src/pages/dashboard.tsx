@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Sidebar } from "@/components/sidebar";
 import { ProgressOverview } from "@/components/progress-overview";
+import { UserMenu } from "@/components/user-menu"; // Import the new component
 import { DashboardData } from "@/types";
 import { Link } from "wouter";
 import { BookOpen, Code, Trophy, TrendingUp } from "lucide-react";
@@ -30,11 +31,8 @@ function getCleanDescription(description: string): string {
 }
 
 export default function Dashboard() {
-  // Mock user ID - in a real app, this would come from authentication
-  const userId = 1;
-
   const { data: dashboardData, isLoading } = useQuery<DashboardData>({
-    queryKey: [`/api/dashboard/${userId}`],
+    queryKey: ['/api/dashboard'],
   });
 
   if (isLoading) {
@@ -88,11 +86,8 @@ export default function Dashboard() {
                 <div className="text-sm text-gray-500">Problems Solved</div>
                 <div className="text-lg font-bold text-green-600">{dashboardData.stats.problems_solved}/60</div>
               </div>
-              <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
-                <span className="text-white font-medium">
-                  {dashboardData.user.username.charAt(0).toUpperCase()}
-                </span>
-              </div>
+              {/* Replace the old avatar with UserMenu */}
+              <UserMenu user={dashboardData.user} size="md" />
             </div>
           </div>
         </div>

@@ -1,24 +1,20 @@
 import { users, type User, type InsertUser } from "@shared/schema";
 
-// modify the interface with any CRUD methods
-// you might need
-
+// Updated interface to use string IDs to match your actual usage
 export interface IStorage {
-  getUser(id: number): Promise<User | undefined>;
+  getUser(id: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
 }
 
 export class MemStorage implements IStorage {
-  private users: Map<number, User>;
-  currentId: number;
+  private users: Map<string, User>;
 
   constructor() {
     this.users = new Map();
-    this.currentId = 1;
   }
 
-  async getUser(id: number): Promise<User | undefined> {
+  async getUser(id: string): Promise<User | undefined> {
     return this.users.get(id);
   }
 
@@ -29,9 +25,9 @@ export class MemStorage implements IStorage {
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const id = this.currentId++;
-    const user: User = { ...insertUser, id };
-    this.users.set(id, user);
+    // Use the provided ID from insertUser (which should include the id)
+    const user: User = { ...insertUser } as User;
+    this.users.set(user.id, user);
     return user;
   }
 }

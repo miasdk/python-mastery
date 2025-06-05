@@ -6,19 +6,18 @@ import session from "express-session";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 
-
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// Add session middleware
 app.use(session({
   secret: process.env.SESSION_SECRET || 'python-learning-platform-secret',
   resave: false,
   saveUninitialized: false,
   cookie: {
     secure: false, // Set to true in production with HTTPS
-    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    httpOnly: true // Important for security
   }
 }));
 
@@ -40,11 +39,9 @@ app.use((req, res, next) => {
       if (capturedJsonResponse) {
         logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
       }
-
       if (logLine.length > 80) {
         logLine = logLine.slice(0, 79) + "…";
       }
-
       log(logLine);
     }
   });
@@ -58,23 +55,20 @@ app.use((req, res, next) => {
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
-
+    console.error('❌ Express error:', err);
     res.status(status).json({ message });
-    throw err;
   });
 
-  // importantly only setup vite in development and after
-  // setting up all the other routes so the catch-all route
-  // doesn't interfere with the other routes
   if (app.get("env") === "development") {
     await setupVite(app, server);
   } else {
     serveStatic(app);
   }
 
-  // WITH this:
-  const port = process.env.PORT || 5000;
+  // Use PORT from env, defaulting to 3000
+  const port = process.env.PORT || 3000;
   server.listen(port, () => {
-  log(`🚀 PythonMastery serving on http://localhost:${port}`);
+    log(`🚀 PythonMastery serving on http://localhost:${port}`);
+    log(`🔗 GitHub OAuth callback: http://localhost:${port}/api/auth/github/callback`);
   });
 })();
