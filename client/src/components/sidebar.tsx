@@ -1,10 +1,29 @@
+import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, Lock, Circle, Trophy, Star, Medal } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { 
+  CheckCircle, 
+  Lock, 
+  Circle, 
+  Trophy, 
+  Star, 
+  Medal,
+  ChevronLeft, 
+  ChevronRight,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Flame,
+  Zap,
+  BookOpen,
+  Award
+} from "lucide-react";
+import { SiPython } from "react-icons/si"; // Official Python logo
 import { Section, Achievement } from "@/types";
 import { Link, useLocation } from "wouter";
 import { calculateLevel } from "@/lib/level-system";
+import { cn } from "@/lib/utils";
 
 interface SidebarProps {
   sections: Section[];
@@ -20,23 +39,135 @@ interface SidebarProps {
 
 export function Sidebar({ sections, currentProblemId, stats, achievements }: SidebarProps) {
   const [location] = useLocation();
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const levelInfo = calculateLevel(stats.total_xp);
+
+  // Get achievement icons - preserve your existing logic
+  const getAchievementIcon = (iconClass: string) => {
+    if (iconClass === "fas fa-trophy") return <Trophy className="w-4 h-4 text-amber-600" />;
+    if (iconClass === "fas fa-star") return <Star className="w-4 h-4 text-emerald-600" />;
+    if (iconClass === "fas fa-medal") return <Medal className="w-4 h-4 text-blue-600" />;
+    return <Trophy className="w-4 h-4 text-amber-600" />; // fallback
+  };
+
+  if (isCollapsed) {
+    return (
+      <div className="w-14 bg-white shadow-lg border-r border-gray-200 flex flex-col items-center py-6 space-y-6">
+        {/* Expand Button */}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setIsCollapsed(false)}
+          className="w-8 h-8 p-0 hover:bg-gray-100"
+          title="Expand Sidebar"
+        >
+          <PanelLeftOpen className="w-4 h-4 text-gray-600" />
+        </Button>
+
+        {/* App Icon with Official Python Logo */}
+        <div className="w-8 h-8 bg-gradient-to-br from-yellow-400 to-blue-600 rounded-lg flex items-center justify-center">
+          <SiPython className="w-5 h-5 text-white" />
+        </div>
+
+        {/* Progress Ring */}
+        <div className="relative w-10 h-10">
+          <svg className="w-10 h-10 transform -rotate-90" viewBox="0 0 36 36">
+            <path
+              d="m18,2.0845 a 15.9155,15.9155 0 0,1 0,31.831 a 15.9155,15.9155 0 0,1 0,-31.831"
+              fill="none"
+              stroke="#e5e7eb"
+              strokeWidth="3"
+            />
+            <path
+              d="m18,2.0845 a 15.9155,15.9155 0 0,1 0,31.831 a 15.9155,15.9155 0 0,1 0,-31.831"
+              fill="none"
+              stroke="#3b82f6"
+              strokeWidth="3"
+              strokeDasharray={`${stats.progress_percentage}, 100`}
+            />
+          </svg>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span className="text-xs font-bold text-gray-700">
+              {Math.round(stats.progress_percentage)}%
+            </span>
+          </div>
+        </div>
+
+        {/* Key Stats - Just Icons */}
+        <div className="flex flex-col space-y-4">
+          <div className="flex flex-col items-center" title={`${stats.total_xp} Total XP`}>
+            <Zap className="w-5 h-5 text-yellow-500" />
+            <span className="text-xs font-medium text-gray-700 mt-1">{stats.total_xp}</span>
+          </div>
+          
+          <div className="flex flex-col items-center" title={`${stats.current_streak} Day Streak`}>
+            <Flame className="w-5 h-5 text-orange-500" />
+            <span className="text-xs font-medium text-gray-700 mt-1">{stats.current_streak}</span>
+          </div>
+          
+          <div className="flex flex-col items-center" title={`Level ${levelInfo.level}`}>
+            <Star className="w-5 h-5 text-blue-500" />
+            <span className="text-xs font-medium text-gray-700 mt-1">L{levelInfo.level}</span>
+          </div>
+        </div>
+
+        {/* Current Section Indicator */}
+        <div className="flex flex-col space-y-2">
+          {sections.slice(0, 4).map((section) => {
+            const isCurrentSection = section.lessons.some(lesson => 
+              lesson.problems.some(problem => problem.id === currentProblemId)
+            );
+            const isCompleted = section.completed_lessons === section.total_lessons && section.total_lessons > 0;
+            
+            return (
+              <div
+                key={section.id}
+                className={cn(
+                  "w-2 h-2 rounded-full transition-all duration-200",
+                  isCurrentSection
+                    ? "bg-blue-500 w-3 h-3"
+                    : isCompleted
+                    ? "bg-emerald-500"
+                    : section.is_locked
+                    ? "bg-gray-300"
+                    : "bg-gray-400"
+                )}
+                title={`${section.title} - ${isCompleted ? 'Completed' : isCurrentSection ? 'Current' : 'Available'}`}
+              />
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-80 bg-white shadow-lg border-r border-gray-200 flex flex-col">
-      {/* Header */}
+      {/* Header with Official Python Logo */}
       <div className="p-6 border-b border-gray-100">
-        <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
-            <i className="fas fa-code text-white text-lg"></i>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-yellow-400 to-blue-600 rounded-lg flex items-center justify-center">
+              <SiPython className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-xl font-bold text-gray-900">PyLearn</h1>
+              <p className="text-sm text-gray-500">Interactive Python Learning</p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-xl font-bold text-gray-900">PyLearn</h1>
-            <p className="text-sm text-gray-500">Interactive Python Learning</p>
-          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setIsCollapsed(true)}
+            className="w-8 h-8 p-0"
+            title="Collapse Sidebar"
+          >
+            <PanelLeftClose className="w-4 h-4" />
+          </Button>
         </div>
       </div>
 
-      {/* Progress Overview */}
+      {/* Progress Overview - COMPLETELY PRESERVED */}
       <div className="p-6 border-b border-gray-100">
         <div className="flex items-center justify-between mb-4">
           <span className="text-sm font-medium text-gray-700">Overall Progress</span>
@@ -57,39 +188,34 @@ export function Sidebar({ sections, currentProblemId, stats, achievements }: Sid
           </div>
         </div>
 
-        {/* Level Display */}
-        {(() => {
-          const levelInfo = calculateLevel(stats.total_xp);
-          return (
-            <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center">
-                  <Star className="w-4 h-4 text-blue-600 mr-1" />
-                  <span className="text-sm font-medium text-blue-900">
-                    Level {levelInfo.level} {levelInfo.title}
-                  </span>
-                </div>
-                <span className="text-xs text-blue-700">
-                  {levelInfo.currentXP}/{levelInfo.xpForNextLevel} XP
-                </span>
-              </div>
-              <Progress value={levelInfo.progressPercentage} className="h-1.5" />
-              
-              {/* Next Unlock Display */}
-              {levelInfo.nextUnlock && levelInfo.xpToNextUnlock && (
-                <div className="mt-2 p-2 bg-amber-50 border border-amber-200 rounded">
-                  <div className="text-xs font-medium text-amber-800">Next Unlock:</div>
-                  <div className="text-xs text-amber-700">{levelInfo.nextUnlock}</div>
-                  <div className="text-xs text-amber-600 mt-1">
-                    {levelInfo.xpToNextUnlock} XP needed
-                  </div>
-                </div>
-              )}
+        {/* Level Display - COMPLETELY PRESERVED */}
+        <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center">
+              <Star className="w-4 h-4 text-blue-600 mr-1" />
+              <span className="text-sm font-medium text-blue-900">
+                Level {levelInfo.level} {levelInfo.title}
+              </span>
             </div>
-          );
-        })()}
+            <span className="text-xs text-blue-700">
+              {levelInfo.currentXP}/{levelInfo.xpForNextLevel} XP
+            </span>
+          </div>
+          <Progress value={levelInfo.progressPercentage} className="h-1.5" />
+          
+          {/* Next Unlock Display - PRESERVED */}
+          {levelInfo.nextUnlock && levelInfo.xpToNextUnlock && (
+            <div className="mt-2 p-2 bg-amber-50 border border-amber-200 rounded">
+              <div className="text-xs font-medium text-amber-800">Next Unlock:</div>
+              <div className="text-xs text-amber-700">{levelInfo.nextUnlock}</div>
+              <div className="text-xs text-amber-600 mt-1">
+                {levelInfo.xpToNextUnlock} XP needed
+              </div>
+            </div>
+          )}
+        </div>
 
-        {/* Achievement Badges */}
+        {/* Achievement Badges - COMPLETELY PRESERVED */}
         <div className="mt-4">
           <div className="text-xs font-medium text-gray-700 mb-2">Recent Achievements</div>
           <div className="flex space-x-2">
@@ -99,16 +225,14 @@ export function Sidebar({ sections, currentProblemId, stats, achievements }: Sid
                 className="w-8 h-8 bg-amber-100 rounded-full flex items-center justify-center"
                 title={achievement.title}
               >
-                {achievement.icon === "fas fa-trophy" && <Trophy className="w-4 h-4 text-amber-600" />}
-                {achievement.icon === "fas fa-star" && <Star className="w-4 h-4 text-emerald-600" />}
-                {achievement.icon === "fas fa-medal" && <Medal className="w-4 h-4 text-blue-600" />}
+                {getAchievementIcon(achievement.icon)}
               </div>
             ))}
           </div>
         </div>
       </div>
 
-      {/* Learning Path Navigator */}
+      {/* Learning Path Navigator - COMPLETELY PRESERVED */}
       <div className="flex-1 overflow-y-auto">
         <div className="p-6">
           <h3 className="text-sm font-semibold text-gray-900 mb-4">Learning Path</h3>

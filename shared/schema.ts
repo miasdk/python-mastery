@@ -56,6 +56,11 @@ export const problems = pgTable("problems", {
   testCases: jsonb("test_cases").notNull(),
   hints: jsonb("hints").notNull(),
   xpReward: integer("xp_reward").default(50).notNull(),
+  // NEW: Research Framework Fields
+  researchTopics: jsonb("research_topics"), // Array of research topics/concepts
+  learningObjectives: jsonb("learning_objectives"), // Array of learning goals
+  professionalContext: text("professional_context"), // Why this matters professionally
+  businessCategory: text("business_category"), // E.g., "fintech", "e-commerce", "saas"
 });
 
 export const userProgress = pgTable("user_progress", {
@@ -158,11 +163,24 @@ export type CodeSubmission = typeof codeSubmissions.$inferSelect;
 export type InsertCodeSubmission = z.infer<typeof insertCodeSubmissionSchema>;
 export type Achievement = typeof achievements.$inferSelect;
 
+// Enhanced Problem type for research framework
+export type EnhancedProblem = Problem & {
+  researchTopics?: string[];
+  learningObjectives?: string[];
+  professionalContext?: string;
+  businessCategory?: string;
+};
+
 // API Response types
 export type ProblemWithProgress = Problem & {
   isCompleted: boolean;
   attempts: number;
   bestTime?: number;
+  // Add research framework fields to API responses
+  researchTopics?: string[];
+  learningObjectives?: string[];
+  professionalContext?: string;
+  businessCategory?: string;
 };
 
 export type LessonWithProblems = Lesson & {
@@ -188,4 +206,24 @@ export type UserDashboard = {
     currentStreak: number;
     totalXp: number;
   };
+};
+
+// Research Framework Utilities
+export type ResearchTopic = {
+  concept: string;
+  description: string;
+  documentation_link?: string;
+};
+
+export type LearningObjective = {
+  skill: string;
+  description: string;
+  professional_relevance: string;
+};
+
+export type BusinessContext = {
+  industry: string;
+  use_case: string;
+  companies_using: string[];
+  why_it_matters: string;
 };

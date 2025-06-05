@@ -22,6 +22,11 @@ export interface Problem {
   is_completed: boolean;
   attempts: number;
   best_time?: number;
+  // NEW: Research Framework Fields (optional to avoid breaking changes)
+  research_topics?: string[];
+  learning_objectives?: string[];
+  professional_context?: string;
+  business_category?: string;
 }
 
 export interface TestCase {
@@ -121,4 +126,9 @@ export interface ProblemDetail extends Problem {
     section: string;
     lesson: string;
   };
+  // NEW: Research Framework Fields (optional)
+  researchTopics?: string[];
+  learningObjectives?: string[];
+  professionalContext?: string;
+  businessCategory?: string;
 }

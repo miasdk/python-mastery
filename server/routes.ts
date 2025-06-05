@@ -9,9 +9,10 @@ import { createServer, type Server } from "http";
 import { db } from "./db";
 import * as schema from "../shared/schema";
 import { eq, asc, desc, and, or, isNull } from "drizzle-orm";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const database = db;
-
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 // Validate required environment variables
 if (!process.env.GITHUB_CLIENT_ID) {
   throw new Error('GITHUB_CLIENT_ID environment variable is required');
@@ -377,91 +378,235 @@ console.log("📤 Returning current problem:", currentProblem?.id, currentProble
   });
 
   // ===============================
-  // PROBLEM ROUTES (ORIGINAL SYSTEM - SCHEMA CORRECTED)
+  // AI CHAT ROUTES (ADD THESE HERE!)
   // ===============================
-
-  // Get problem details - matches your original API (plural problems)
-  app.get("/api/problems/:problemId", async (req, res) => {
+  // Add this route to your Express app
+  app.post('/api/ai-chat', async (req, res) => {
     try {
-      const problemId = parseInt(req.params.problemId);
+      const { message, context } = req.body;
+      const sessionUserId = (req as any).session?.userId;
+      const userId = sessionUserId || DEFAULT_USER_ID;
+
+      // Rate limiting check (basic implementation)
+      // TODO: Implement proper rate limiting with Redis or database
+      
+      // Create context-aware system prompt
+      const systemPrompt = `You are an AI Python tutor for PythonMastery, a platform that teaches Python through real business problems. Your role is to guide students without giving away complete solutions.
+
+  CURRENT CONTEXT:
+  - Problem: "${context.problem.title}" (${context.problem.difficulty})
+  - Problem Description: ${context.problem.description}
+  - Student Level: ${context.userLevel}
+  - Hints Used: ${context.hintsUsed}
+  - Research Topics: ${context.problem.researchTopics?.join(', ') || 'None specified'}
+
+  STUDENT'S CURRENT CODE:
+  \`\`\`python
+  ${context.userCode || 'No code written yet'}
+  \`\`\`
+
+  GUIDELINES:
+  1. **Guide, don't solve**: Help students think through problems rather than giving direct answers
+  2. **Ask clarifying questions**: Help students break down the problem
+  3. **Encourage research**: Point them to specific Python concepts to look up
+  4. **Relate to business context**: Connect concepts to real-world applications
+  5. **Be encouraging**: Celebrate progress and normalize struggling
+  6. **Code review style**: If they show code, point out what's working well before suggesting improvements
+  7. **Progressive hints**: Start with conceptual guidance, get more specific if they're really stuck
+
+  EXAMPLES OF GOOD RESPONSES:
+  - "I see you're working on user validation. What do you think makes a username 'valid' in a real application?"
+  - "Your code structure looks good! The isinstance() check is exactly what professional developers use. What do you think should happen if the username is too short?"
+  - "That's a great question about dictionaries. Try looking up 'Python dictionary syntax' - how do you think you'd store the username and email together?"
+
+  AVOID:
+  - Giving complete code solutions
+  - Being overly academic or theoretical
+  - Overwhelming with too much information at once
+  - Making students feel bad for not knowing something
+
+  Keep responses concise, friendly, and focused on the student's specific question. Respond in a helpful, encouraging tone.`;
+
+      // Combine system prompt with user message
+      const fullPrompt = `${systemPrompt}\n\nStudent Question: ${message}`;
+
+      // Get Gemini model
+      const model = genAI.getGenerativeModel({ 
+        model: "gemini-1.5-flash", // Free tier model
+        generationConfig: {
+          maxOutputTokens: 300, // Keep responses concise
+          temperature: 0.7, // Balanced creativity and consistency
+        },
+      });
+
+      // Generate response
+      const result = await model.generateContent(fullPrompt);
+      const response = await result.response;
+      const aiResponse = response.text();
+
+      if (!aiResponse) {
+        throw new Error('No response from AI');
+      }
+
+      // Optional: Log the interaction for analytics
+      try {
+        console.log(`AI Chat - User: ${userId}, Problem: ${context.problem.title}`);
+      } catch (logError) {
+        console.error('Error logging chat interaction:', logError);
+      }
+
+      res.json({
+        response: aiResponse,
+        model: 'gemini-1.5-flash'
+      });
+
+    } catch (error) {
+      console.error('AI Chat error:', error);
+      
+      // Provide helpful fallback response
+      const fallbackResponse = "I'm having trouble right now, but here's what I'd suggest: try breaking down the problem into smaller steps. Look at the research topics for guidance on what Python concepts to explore. If you're stuck on validation, think about what makes data 'valid' for a real application.";
+      
+      res.json({
+        response: fallbackResponse,
+        error: true
+      });
+    }
+  });
+
+  // Optional: Add usage tracking endpoint
+  app.get('/api/ai-chat/usage', async (req, res) => {
+    try {
       const sessionUserId = (req as any).session?.userId;
       const userId = sessionUserId || DEFAULT_USER_ID;
       
-      console.log(`🧩 Fetching problem ${problemId} for user ${userId}`);
-      
-      // Get problem using schema that matches your DB structure
-      const problem = await database
-        .select()
-        .from(schema.problems)
-        .where(eq(schema.problems.id, problemId))
-        .limit(1);
-      
-      if (problem.length === 0) {
-        return res.status(404).json({ error: "Problem not found" });
-      }
-      
-      const problemData = problem[0];
-      
-      // Get lesson info (using lessonId from problems table)
-      const lesson = await database
-        .select()
-        .from(schema.lessons)
-        .where(eq(schema.lessons.id, problemData.lessonId))
-        .limit(1);
-      
-      let section = null;
-      if (lesson.length > 0) {
-        const sectionResult = await database
-          .select()
-          .from(schema.sections)
-          .where(eq(schema.sections.id, lesson[0].sectionId))
-          .limit(1);
-        section = sectionResult.length > 0 ? sectionResult[0] : null;
-      }
-      
-      // Get user progress for this specific problem
-      const progress = await database
-        .select()
-        .from(schema.userProgress)
-        .where(and(
-          eq(schema.userProgress.userId, userId),
-          eq(schema.userProgress.problemId, problemId)
-        ))
-        .limit(1);
-      
-      const progressData = progress.length > 0 ? progress[0] : {
-        isCompleted: false,
-        attempts: 0,
-        bestTime: null,
-        hintsUsed: 0
-      };
-      
+      // TODO: Implement usage tracking in database
+      // For now, return mock data based on Gemini's generous limits
       res.json({
-        id: problemData.id,
-        title: problemData.title,
-        description: problemData.description,
-        difficulty: problemData.difficulty,
-        order_index: problemData.orderIndex,
-        starter_code: problemData.starterCode,
-        hints: problemData.hints,
-        xp_reward: problemData.xpReward,
-        test_cases: problemData.testCases,
-        progress: {
-          is_completed: progressData.isCompleted,
-          attempts: progressData.attempts,
-          best_time: progressData.bestTime,
-          hints_used: progressData.hintsUsed
-        },
-        breadcrumb: {
-          section: section?.title || "Unknown Section",
-          lesson: lesson.length > 0 ? lesson[0].title : "Unknown Lesson"
-        }
+        questionsUsed: 3,
+        questionsRemaining: 1497, // Gemini allows 1,500 per day!
+        resetDate: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+        model: 'gemini-1.5-flash'
       });
     } catch (error) {
-      console.error("Error fetching problem:", error);
-      res.status(500).json({ error: "Failed to fetch problem" });
+      console.error('Error fetching AI usage:', error);
+      res.status(500).json({ error: 'Failed to fetch usage data' });
     }
   });
+
+
+  // ===============================
+  // PROBLEM ROUTES (ORIGINAL SYSTEM - SCHEMA CORRECTED)
+  // ===============================
+
+  // ONLY UPDATE THIS PART in your routes.ts file
+// Replace the existing /api/problems/:problemId endpoint with this enhanced version
+
+// Get problem details - ENHANCED with research framework fields
+app.get("/api/problems/:problemId", async (req, res) => {
+  try {
+    const problemId = parseInt(req.params.problemId);
+    const sessionUserId = (req as any).session?.userId;
+    const userId = sessionUserId || DEFAULT_USER_ID;
+    
+    console.log(`🧩 Fetching problem ${problemId} for user ${userId}`);
+    
+    // Get problem using schema that matches your DB structure - ENHANCED
+    const problem = await database
+      .select({
+        // Existing fields (keep all your current functionality)
+        id: schema.problems.id,
+        title: schema.problems.title,
+        description: schema.problems.description,
+        difficulty: schema.problems.difficulty,
+        orderIndex: schema.problems.orderIndex,
+        starterCode: schema.problems.starterCode,
+        hints: schema.problems.hints,
+        xpReward: schema.problems.xpReward,
+        testCases: schema.problems.testCases,
+        lessonId: schema.problems.lessonId,
+        // NEW: Research framework fields (optional, won't break if missing)
+        researchTopics: schema.problems.researchTopics,
+        learningObjectives: schema.problems.learningObjectives,
+        professionalContext: schema.problems.professionalContext,
+        businessCategory: schema.problems.businessCategory,
+      })
+      .from(schema.problems)
+      .where(eq(schema.problems.id, problemId))
+      .limit(1);
+    
+    if (problem.length === 0) {
+      return res.status(404).json({ error: "Problem not found" });
+    }
+    
+    const problemData = problem[0];
+    
+    // Get lesson info (using lessonId from problems table) - UNCHANGED
+    const lesson = await database
+      .select()
+      .from(schema.lessons)
+      .where(eq(schema.lessons.id, problemData.lessonId))
+      .limit(1);
+    
+    let section = null;
+    if (lesson.length > 0) {
+      const sectionResult = await database
+        .select()
+        .from(schema.sections)
+        .where(eq(schema.sections.id, lesson[0].sectionId))
+        .limit(1);
+      section = sectionResult.length > 0 ? sectionResult[0] : null;
+    }
+    
+    // Get user progress for this specific problem - UNCHANGED
+    const progress = await database
+      .select()
+      .from(schema.userProgress)
+      .where(and(
+        eq(schema.userProgress.userId, userId),
+        eq(schema.userProgress.problemId, problemId)
+      ))
+      .limit(1);
+    
+    const progressData = progress.length > 0 ? progress[0] : {
+      isCompleted: false,
+      attempts: 0,
+      bestTime: null,
+      hintsUsed: 0
+    };
+    
+    // ENHANCED response with optional research framework fields
+    res.json({
+      // Existing fields (all unchanged to maintain compatibility)
+      id: problemData.id,
+      title: problemData.title,
+      description: problemData.description,
+      difficulty: problemData.difficulty,
+      order_index: problemData.orderIndex,
+      starter_code: problemData.starterCode,
+      hints: problemData.hints,
+      xp_reward: problemData.xpReward,
+      test_cases: problemData.testCases,
+      progress: {
+        is_completed: progressData.isCompleted,
+        attempts: progressData.attempts,
+        best_time: progressData.bestTime,
+        hints_used: progressData.hintsUsed
+      },
+      breadcrumb: {
+        section: section?.title || "Unknown Section",
+        lesson: lesson.length > 0 ? lesson[0].title : "Unknown Lesson"
+      },
+      // NEW: Research framework fields (only included if they exist)
+      ...(typeof problemData.researchTopics !== 'undefined' ? { researchTopics: problemData.researchTopics } : {}),
+      ...(typeof problemData.learningObjectives !== 'undefined' ? { learningObjectives: problemData.learningObjectives } : {}),
+      ...(typeof problemData.professionalContext !== 'undefined' ? { professionalContext: problemData.professionalContext } : {}),
+      ...(typeof problemData.businessCategory !== 'undefined' ? { businessCategory: problemData.businessCategory } : {}),
+    });
+  } catch (error) {
+    console.error("Error fetching problem:", error);
+    res.status(500).json({ error: "Failed to fetch problem" });
+  }
+});
 
   // Execute code endpoint - your original implementation with schema fixes
   app.post("/api/execute-code", async (req, res) => {

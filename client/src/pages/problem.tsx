@@ -5,7 +5,8 @@ import { Sidebar } from "@/components/sidebar";
 import { ProblemDescription } from "@/components/problem-description";
 import { CodeEditor } from "@/components/code-editor";
 import { OutputPanel } from "@/components/output-panel";
-import { UserMenu } from "@/components/user-menu"; // Import UserMenu
+import { UserMenu } from "@/components/user-menu";
+import { AIChat } from "@/components/ai-chat"; // NEW IMPORT
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Clock, ChevronLeft } from "lucide-react";
@@ -23,6 +24,7 @@ export default function Problem() {
   const [executionResult, setExecutionResult] = useState<CodeExecutionResult | undefined>();
   const [timeElapsed, setTimeElapsed] = useState(0);
   const [startTime] = useState(Date.now());
+  const [hintsUsed, setHintsUsed] = useState(0); // NEW: Track hints for AI context
 
   // Timer effect
   useEffect(() => {
@@ -34,9 +36,9 @@ export default function Problem() {
   }, [startTime]);
 
   // Define a type for the user object
-  type User = { id: string } | null;
+  type User = { id: string; totalXp?: number; currentStreak?: number } | null;
 
-  // Fetch current user data (ADDED!)
+  // Fetch current user data
   const { data: user } = useQuery<User>({
     queryKey: ['/api/auth/user'],
   });
@@ -56,6 +58,7 @@ export default function Problem() {
   useEffect(() => {
     setCode("");
     setExecutionResult(undefined);
+    setHintsUsed(0); // Reset hints used
   }, [problemId]);
 
   // Initialize code when problem loads
@@ -100,7 +103,7 @@ export default function Problem() {
       const response = await apiRequest("POST", "/api/submit-solution", {
         problem_id: problemId,
         code,
-        user_id: user?.id || "demo_user" // Use actual user ID if available
+        user_id: user?.id || "demo_user"
       });
       return response.json();
     },
@@ -151,6 +154,7 @@ export default function Problem() {
   };
 
   const handleHintUsed = () => {
+    setHintsUsed(prev => prev + 1); // Track hints for AI context
     hintMutation.mutate();
   };
 
@@ -197,7 +201,7 @@ export default function Problem() {
 
   return (
     <div className="min-h-screen flex bg-gray-50 animate-fade-in">
-      {/* Sidebar */}
+      {/* Enhanced Collapsible Sidebar */}
       {dashboardData && (
         <div className="animate-slide-in-right" style={{ animationDelay: '100ms' }}>
           <Sidebar
@@ -237,7 +241,7 @@ export default function Problem() {
                 <span>{formatTime(timeElapsed)}</span>
               </div>
               
-              {/* User Menu - UPDATED! */}
+              {/* User Menu */}
               <UserMenu user={user} size="sm" />
             </div>
           </div>
@@ -267,6 +271,16 @@ export default function Problem() {
           />
         </div>
       </div>
+
+      {/* AI Chat Component - NEW! */}
+      {problem && (
+        <AIChat
+          problem={problem}
+          userCode={code}
+          hintsUsed={hintsUsed}
+          userLevel={1} // You can get this from user data when available
+        />
+      )}
     </div>
   );
 }
