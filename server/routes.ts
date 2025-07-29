@@ -10,6 +10,8 @@ import { db } from "./db";
 import * as schema from "../shared/schema";
 import { eq, asc, desc, and, or, isNull } from "drizzle-orm";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { PythonExecutor } from "./python-executor";
+import { SimplePythonExecutor } from "./simple-python-executor";
 
 const database = db;
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
@@ -608,140 +610,98 @@ app.get("/api/problems/:problemId", async (req, res) => {
   }
 });
 
-  // Execute code endpoint - your original implementation with schema fixes
+  // Execute code endpoint - ENHANCED with real Python execution
   app.post("/api/execute-code", async (req, res) => {
     try {
       const { code, test_cases } = req.body;
       
-      // Your original validation logic
-      const syntaxErrors = [] as string[];
-      if (code.includes('let ')) {
-        syntaxErrors.push("Python uses variable assignment without 'let' keyword. Use: name = \"value\"");
-      }
-      if (code.includes('const ')) {
-        syntaxErrors.push("Python doesn't use 'const'. Use: variable = value");
-      }
-      if (code.includes('var ')) {
-        syntaxErrors.push("Python doesn't use 'var'. Use: variable = value");
-      }
+      console.log('🐍 Executing Python code...');
       
-      const hasFunction = code.includes('def ');
-      const hasReturn = code.includes('return');
-      const hasValidPythonSyntax = syntaxErrors.length === 0;
-      
-      // Enhanced validation for specific problems
-      let contentValidation = true;
-      let contentErrors = [];
-      
-      // Check if this looks like the business card problem
-      if (code.includes('create_business_card')) {
-        const nameMatch = code.match(/name\s*=\s*["']([^"']+)["']/);
-        const ageMatch = code.match(/age\s*=\s*(\d+)/);
-        const cityMatch = code.match(/city\s*=\s*["']([^"']+)["']/);
-        const professionMatch = code.match(/profession\s*=\s*["']([^"']+)["']/);
-        
-        if (!nameMatch || nameMatch[1].trim() === '') {
-          contentErrors.push('Name must be a non-empty string');
-          contentValidation = false;
-        }
-        if (!ageMatch || parseInt(ageMatch[1]) <= 0) {
-          contentErrors.push('Age must be a positive number');
-          contentValidation = false;
-        }
-        if (!cityMatch || cityMatch[1].trim() === '') {
-          contentErrors.push('City must be a non-empty string');
-          contentValidation = false;
-        }
-        if (!professionMatch || professionMatch[1].trim() === '') {
-          contentErrors.push('Profession must be a non-empty string');
-          contentValidation = false;
-        }
-      }
-      
-      const success = hasFunction && hasReturn && hasValidPythonSyntax && contentValidation;
-      
-      // Your original output formatting
-      let outputMessage = "";
-      if (success) {
-        const functionMatch = code.match(/def\s+(\w+)/);
-        const functionName = functionMatch ? functionMatch[1] : 'your_function';
-        
-        let resultDisplay = "";
-        if (functionName === 'create_business_card') {
-          const nameMatch = code.match(/name\s*=\s*["']([^"']+)["']/);
-          const ageMatch = code.match(/age\s*=\s*(\d+)/);
-          const cityMatch = code.match(/city\s*=\s*["']([^"']+)["']/);
-          const professionMatch = code.match(/profession\s*=\s*["']([^"']+)["']/);
-          
-          const actualValues = [
-            nameMatch ? nameMatch[1] : "unknown",
-            ageMatch ? parseInt(ageMatch[1]) : 0,
-            cityMatch ? cityMatch[1] : "unknown", 
-            professionMatch ? professionMatch[1] : "unknown"
-          ];
-          
-          resultDisplay = `('${actualValues[0]}', ${actualValues[1]}, '${actualValues[2]}', '${actualValues[3]}')`;
-        } else {
-          const expectedResult = test_cases?.[0]?.expected;
-          if (Array.isArray(expectedResult)) {
-            resultDisplay = `(${expectedResult.map(val => 
-              typeof val === 'string' ? `'${val}'` : val
-            ).join(', ')})`;
-          } else {
-            resultDisplay = typeof expectedResult === 'string' ? `'${expectedResult}'` : String(expectedResult);
-          }
-        }
-        
-        outputMessage = `
-┌─ Python Console ─────────────────────────────────┐
-│                                                  │
-│  >>> ${functionName}()                           │
-│  ${resultDisplay}                                │
-│                                                  │
-└──────────────────────────────────────────────────┘
-
-    ✅ Execution Successful
-    
-    Your function ran without errors and returned:
-    ${resultDisplay}
-    
-    Ready to submit your solution!`;
-      } else {
-        const primaryError = syntaxErrors.length > 0 ? syntaxErrors[0] : 
-                           contentErrors.length > 0 ? contentErrors[0] :
-                           !hasFunction ? 'Missing function definition' :
-                           !hasReturn ? 'Missing return statement' : 'Unknown error';
-        
-        outputMessage = `
->>> Running your code...
-Error: ${primaryError}
-
-❌ Code execution failed
-
-${!hasFunction ? '❌ Function definition missing' : '✅ Function definition complete'}
-${!hasReturn ? '❌ Return statement missing' : '✅ Return statement present'}
-${!hasValidPythonSyntax ? '❌ Python syntax invalid' : '✅ Python syntax valid'}
-${!contentValidation ? '❌ Variable assignments invalid' : '✅ Variable assignments valid'}
-
-Fix the issues above and try again.`;
-      }
-
-      const result = {
-        success: success,
-        execution_time: Math.floor(Math.random() * 100) + 50,
-        test_results: (test_cases || []).map((testCase: any, index: number) => ({
-          test_case: index + 1,
-          passed: success,
-          input: testCase.input,
-          expected: testCase.expected,
-          actual: success ? testCase.expected : null,
-          error: success ? null : syntaxErrors.length > 0 ? syntaxErrors[0] : "Function implementation incomplete"
-        })),
-        output: outputMessage,
-        error: syntaxErrors.length > 0 ? syntaxErrors.join('. ') : null
+      // Quick syntax validation for better error messages
+      const quickValidation = {
+        hasLet: code.includes('let '),
+        hasConst: code.includes('const '),
+        hasVar: code.includes('var '),
+        hasFunction: code.includes('def '),
+        hasReturn: code.includes('return')
       };
-      
-      res.json(result);
+
+      // Provide helpful error messages for common mistakes
+      if (quickValidation.hasLet) {
+        return res.json({
+          success: false,
+          execution_time: 0,
+          test_results: [],
+          output: "❌ Python doesn't use 'let'. Use: variable = value",
+          error: "Python uses variable assignment without 'let' keyword"
+        });
+      }
+
+      if (quickValidation.hasConst || quickValidation.hasVar) {
+        return res.json({
+          success: false,
+          execution_time: 0,
+          test_results: [],
+          output: "❌ Python doesn't use 'const' or 'var'. Use: variable = value",
+          error: "Python doesn't use 'const' or 'var' keywords"
+        });
+      }
+
+      if (!quickValidation.hasFunction) {
+        return res.json({
+          success: false,
+          execution_time: 0,
+          test_results: [],
+          output: "❌ Function definition missing. Use: def function_name():",
+          error: "Missing function definition"
+        });
+      }
+
+      if (!quickValidation.hasReturn) {
+        return res.json({
+          success: false,
+          execution_time: 0,
+          test_results: [],
+          output: "❌ Return statement missing. Functions must return a value.",
+          error: "Missing return statement"
+        });
+      }
+
+      // Execute code with real Python interpreter using simple executor
+      if (test_cases && test_cases.length > 0) {
+        // Execute with test cases for comprehensive validation
+        const result = await SimplePythonExecutor.executeWithTests(code, test_cases);
+        
+        res.json({
+          success: result.success,
+          execution_time: result.executionTime,
+          test_results: result.testResults,
+          output: result.output,
+          error: result.error
+        });
+      } else {
+        // Simple execution without test cases
+        const result = await SimplePythonExecutor.executeCode(code);
+        
+        const outputMessage = result.success 
+          ? `>>> Running your code...
+${result.output}
+
+✅ Code executed successfully!`
+          : `>>> Running your code...
+${result.output}
+
+❌ Code execution failed`;
+
+        res.json({
+          success: result.success,
+          execution_time: result.executionTime,
+          test_results: [],
+          output: outputMessage,
+          error: result.error
+        });
+      }
+
     } catch (error) {
       console.error("Code execution error:", error);
       res.status(500).json({ 
@@ -749,7 +709,7 @@ Fix the issues above and try again.`;
         error: "Code execution failed",
         execution_time: 0,
         test_results: [],
-        output: "Console Output:\n>>> Error executing code\nInternal server error occurred"
+        output: ">>> Error executing code\nInternal server error occurred"
       });
     }
   });
@@ -1045,6 +1005,160 @@ ${friendlyExplanation ? 'Try the suggestion above and submit again!' : 'Fix the 
       });
     } catch (error) {
       console.error("Solution submission error:", error);
+      res.status(500).json({ error: "Failed to submit solution" });
+    }
+  });
+
+  // ENHANCED Submit solution endpoint with real Python execution
+  app.post("/api/submit-solution-enhanced", async (req, res) => {
+    try {
+      const { problem_id, code, user_id } = req.body;
+      const sessionUserId = (req as any).session?.userId;
+      const actualUserId = user_id || sessionUserId || DEFAULT_USER_ID;
+      
+      console.log(`🚀 Enhanced code submission for problem ${problem_id} by user ${actualUserId}`);
+      
+      // Get the problem data including test cases
+      const problem = await database
+        .select()
+        .from(schema.problems)
+        .where(eq(schema.problems.id, problem_id))
+        .limit(1);
+      
+      if (problem.length === 0) {
+        return res.status(404).json({ error: "Problem not found" });
+      }
+      
+      const problemData = problem[0];
+      const testCases = problemData.testCases as any[];
+      
+      // Execute code with real Python and test cases
+      const executionResult = await SimplePythonExecutor.executeWithTests(code, testCases);
+      
+      // Enhanced progress tracking
+      let progressData: any = {
+        is_completed: executionResult.success,
+        attempts: 1,
+        best_time: executionResult.success ? executionResult.executionTime : null,
+        xp_gained: 0,
+        new_achievements: [],
+        updated_stats: null
+      };
+
+      if (executionResult.success) {
+        try {
+          const baseXP = problemData.xpReward || 50;
+          const xpGained = baseXP;
+
+          // Check if user progress exists for this problem
+          const existingProgress = await database
+            .select()
+            .from(schema.userProgress)
+            .where(and(
+              eq(schema.userProgress.userId, actualUserId),
+              eq(schema.userProgress.problemId, problem_id)
+            ))
+            .limit(1);
+
+          if (existingProgress.length > 0) {
+            // Update existing progress
+            await database
+              .update(schema.userProgress)
+              .set({
+                isCompleted: executionResult.success,
+                attempts: existingProgress[0].attempts + 1,
+                bestTime: executionResult.success ? Math.min(existingProgress[0].bestTime || 999999, executionResult.executionTime) : existingProgress[0].bestTime,
+                completedAt: executionResult.success ? new Date() : existingProgress[0].completedAt,
+                lastAttemptAt: new Date()
+              })
+              .where(eq(schema.userProgress.id, existingProgress[0].id));
+          } else {
+            // Create new progress record
+            await database.insert(schema.userProgress).values({
+              userId: actualUserId,
+              problemId: problem_id,
+              isCompleted: executionResult.success,
+              attempts: 1,
+              bestTime: executionResult.success ? executionResult.executionTime : null,
+              hintsUsed: 0,
+              completedAt: executionResult.success ? new Date() : null,
+              lastAttemptAt: new Date()
+            });
+          }
+
+          // Save code submission record
+          try {
+            await database.insert(schema.codeSubmissions).values({
+              userId: actualUserId,
+              problemId: problem_id,
+              code: code,
+              isCorrect: executionResult.success,
+              executionTime: executionResult.executionTime,
+              output: executionResult.output,
+              error: executionResult.error
+            });
+          } catch (codeSubmissionError) {
+            console.log('Code submissions table not available:', codeSubmissionError);
+          }
+
+          // Update user stats only for first-time completion
+          if (executionResult.success && existingProgress.length === 0) {
+            const user = await database
+              .select()
+              .from(schema.users)
+              .where(eq(schema.users.id, actualUserId))
+              .limit(1);
+              
+            if (user.length > 0) {
+              const currentUser = user[0];
+              const newTotalXP = currentUser.totalXp + xpGained;
+              const newTotalProblems = currentUser.totalProblems + 1;
+              
+              await database
+                .update(schema.users)
+                .set({
+                  totalXp: newTotalXP,
+                  totalProblems: newTotalProblems,
+                })
+                .where(eq(schema.users.id, actualUserId));
+
+              progressData = {
+                is_completed: executionResult.success,
+                attempts: 1,
+                best_time: executionResult.executionTime,
+                xp_gained: xpGained,
+                xp_breakdown: {
+                  base_xp: baseXP,
+                  efficiency_bonus: 0,
+                  hint_penalty: 0,
+                  total_gained: xpGained
+                },
+                new_achievements: [],
+                updated_stats: {
+                  total_xp: newTotalXP,
+                  total_problems: newTotalProblems,
+                  total_available_problems: 5, // Update based on actual problem count
+                  current_streak: currentUser.currentStreak
+                }
+              };
+            }
+          }
+        } catch (dbError) {
+          console.error("Database update error:", dbError);
+        }
+      }
+
+      res.json({
+        success: executionResult.success,
+        execution_time: executionResult.executionTime,
+        test_results: executionResult.testResults,
+        output: executionResult.output,
+        error: executionResult.error,
+        progress: progressData
+      });
+
+    } catch (error) {
+      console.error("Enhanced solution submission error:", error);
       res.status(500).json({ error: "Failed to submit solution" });
     }
   });
