@@ -256,15 +256,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/auth/github/callback', 
     (req, res, next) => {
       console.log('📥 GitHub OAuth callback received');
+      
+      const frontendUrl = process.env.NODE_ENV === 'production' 
+        ? 'https://python-mastery-smoky.vercel.app'
+        : 'http://localhost:5173';
+      
       passport.authenticate('github', { 
-        failureRedirect: '/?error=oauth_failed',
+        failureRedirect: `${frontendUrl}/?error=oauth_failed`,
         failureMessage: true
       })(req, res, next);
     },
     (req, res) => {
-      console.log('✅ GitHub OAuth successful, redirecting to dashboard');
+      console.log('✅ GitHub OAuth successful, redirecting to frontend');
       (req as any).session.userId = (req.user as any).id;
-      res.redirect('/');
+      
+      const frontendUrl = process.env.NODE_ENV === 'production' 
+        ? 'https://python-mastery-smoky.vercel.app'
+        : 'http://localhost:5173';
+      
+      res.redirect(frontendUrl);
     }
   );
 
