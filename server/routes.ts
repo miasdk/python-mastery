@@ -140,8 +140,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
   await ensureDefaultUser();
 
   // ===============================
-  // HEALTH CHECK ENDPOINT (for Render)
+  // ROOT AND HEALTH ENDPOINTS
   // ===============================
+  
+  // Root endpoint - simple API info
+  app.get('/', (req, res) => {
+    res.json({ 
+      name: 'PythonMastery Backend API',
+      version: '1.0.0',
+      status: 'running',
+      endpoints: {
+        health: '/api/health',
+        auth: '/api/auth/*', 
+        dashboard: '/api/dashboard',
+        problems: '/api/problems/:id'
+      }
+    });
+  });
+  
+  // Health check endpoint (for Render)
   app.get('/api/health', (req, res) => {
     res.json({ status: 'healthy', timestamp: new Date().toISOString() });
   });
