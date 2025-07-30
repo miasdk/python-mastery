@@ -143,20 +143,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ROOT AND HEALTH ENDPOINTS
   // ===============================
   
-  // Root endpoint - simple API info
-  app.get('/', (req, res) => {
-    res.json({ 
-      name: 'PythonMastery Backend API',
-      version: '1.0.0',
-      status: 'running',
-      endpoints: {
-        health: '/api/health',
-        auth: '/api/auth/*', 
-        dashboard: '/api/dashboard',
-        problems: '/api/problems/:id'
-      }
+  // Root endpoint - simple API info (only in production)
+  if (process.env.NODE_ENV === 'production') {
+    app.get('/', (req, res) => {
+      res.json({ 
+        name: 'PythonMastery Backend API',
+        version: '1.0.0',
+        status: 'running',
+        endpoints: {
+          health: '/api/health',
+          auth: '/api/auth/*', 
+          dashboard: '/api/dashboard',
+          problems: '/api/problems/:id'
+        }
+      });
     });
-  });
+  }
   
   // Health check endpoint (for Render)
   app.get('/api/health', (req, res) => {
