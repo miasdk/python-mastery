@@ -24,10 +24,14 @@ if (!process.env.GITHUB_CLIENT_SECRET) {
 }
 
 // Configure GitHub OAuth strategy
+const callbackURL = process.env.NODE_ENV === 'production' 
+  ? "https://python-mastery-backend.onrender.com/api/auth/github/callback"
+  : "http://localhost:3000/api/auth/github/callback";
+
 passport.use(new GitHubStrategy({
   clientID: process.env.GITHUB_CLIENT_ID!,
   clientSecret: process.env.GITHUB_CLIENT_SECRET!,
-  callbackURL: "http://localhost:3000/api/auth/github/callback"
+  callbackURL: callbackURL
 }, async (accessToken: string, refreshToken: string, profile: any, done: any) => {
   try {
     console.log('🔐 GitHub OAuth callback received for user:', profile.username);
@@ -104,7 +108,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   console.log('🔧 GitHub OAuth Configuration:');
   console.log('Client ID:', process.env.GITHUB_CLIENT_ID ? 'Set ✅' : 'Missing ❌');
   console.log('Client Secret:', process.env.GITHUB_CLIENT_SECRET ? 'Set ✅' : 'Missing ❌');
-  console.log('Callback URL: http://localhost:3000/api/auth/github/callback');
+  console.log('Callback URL:', callbackURL);
 
   const DEFAULT_USER_ID = "demo_user";
   
