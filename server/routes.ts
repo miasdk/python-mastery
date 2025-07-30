@@ -322,7 +322,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Create session
       (req as any).session.userId = user.id;
       
-      res.json({ success: true, user });
+      // Save session explicitly
+      (req as any).session.save((err: any) => {
+        if (err) {
+          console.error('❌ Session save error:', err);
+          return res.status(500).json({ error: "Failed to save session" });
+        }
+        
+        console.log('✅ GitHub OAuth session saved with userId:', user.id);
+        res.json({ success: true, user });
+      });
       
     } catch (error) {
       console.error('GitHub OAuth exchange error:', error);

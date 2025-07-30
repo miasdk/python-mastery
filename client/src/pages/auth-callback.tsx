@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useLocation } from 'wouter';
+import { queryClient } from '@/lib/queryClient';
 
 export default function AuthCallback() {
   const [, setLocation] = useLocation();
@@ -34,8 +35,12 @@ export default function AuthCallback() {
         });
 
         if (response.ok) {
-          // Success! Redirect to dashboard
-          setLocation('/dashboard');
+          // Success! Invalidate auth queries to refresh user state
+          queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
+          queryClient.invalidateQueries({ queryKey: ['/api/dashboard'] });
+          
+          // Redirect to home page (which will show dashboard if authenticated)
+          setLocation('/');
         } else {
           throw new Error('Failed to exchange code');
         }
