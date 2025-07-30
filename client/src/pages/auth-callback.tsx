@@ -1,8 +1,8 @@
 import { useEffect } from 'react';
-import { useNavigate } from 'wouter';
+import { useLocation } from 'wouter';
 
 export default function AuthCallback() {
-  const [, setLocation] = useNavigate();
+  const [, setLocation] = useLocation();
 
   useEffect(() => {
     const handleCallback = async () => {
