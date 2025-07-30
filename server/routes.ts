@@ -136,6 +136,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   await ensureDefaultUser();
 
   // ===============================
+  // HEALTH CHECK ENDPOINT (for Render)
+  // ===============================
+  app.get('/api/health', (req, res) => {
+    res.json({ status: 'healthy', timestamp: new Date().toISOString() });
+  });
+
+  // ===============================
   // AUTH ROUTES
   // ===============================
 

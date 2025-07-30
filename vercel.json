@@ -1,6 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "npm run build",
+  "buildCommand": "npm run build:frontend",
   "outputDirectory": "dist/public",
   "devCommand": "npm run dev",
   "installCommand": "npm install",
@@ -8,7 +8,7 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "https://pythonmastery-backend.railway.app/api/$1"
+      "destination": "https://python-mastery-backend.onrender.com/api/$1"
     },
     {
       "source": "/(.*)",
@@ -25,7 +25,7 @@
         },
         {
           "key": "Access-Control-Allow-Origin",
-          "value": "https://pythonmastery-frontend.vercel.app"
+          "value": "*"
         },
         {
           "key": "Access-Control-Allow-Methods",

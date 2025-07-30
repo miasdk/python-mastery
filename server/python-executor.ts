@@ -281,7 +281,7 @@ finally:
    */
   private static createTestRunner(userCode: string, functionName: string, testCases: any[]): string {
     const testCaseCode = testCases.map((tc, index) => {
-      const inputArgs = Array.isArray(tc.input) ? tc.input.map(arg => JSON.stringify(arg)).join(', ') : JSON.stringify(tc.input);
+      const inputArgs = Array.isArray(tc.input) ? tc.input.map((arg: any) => JSON.stringify(arg)).join(', ') : JSON.stringify(tc.input);
       const expectedJson = JSON.stringify(tc.expected);
       
       return `
