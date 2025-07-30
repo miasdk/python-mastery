@@ -1,22 +1,39 @@
-#!/usr/bin/env tsx
+#!/usr/bin/env node
 
-import { db } from '../server/db';
-import { sql } from 'drizzle-orm';
+// Load environment variables first
+import dotenv from 'dotenv';
+dotenv.config();
+
+import pkg from 'pg';
+const { Pool } = pkg;
 import * as fs from 'fs';
 import * as path from 'path';
 
 async function setupDatabase() {
   console.log('🗄️  Setting up database...');
   
+  const connectionString = process.env.DATABASE_URL;
+  if (!connectionString) {
+    console.error('❌ DATABASE_URL environment variable is required');
+    process.exit(1);
+  }
+
+  const pool = new Pool({ connectionString });
+
   try {
+    // Test connection
+    const client = await pool.connect();
+    console.log('✅ Database connection successful');
+    client.release();
+
     // Read the migration file
     const migrationPath = path.join(process.cwd(), 'migrations', '0000_sharp_pepper_potts.sql');
     
     if (!fs.existsSync(migrationPath)) {
-      console.log('❌ Migration file not found. Generating...');
+      console.log('❌ Migration file not found. Creating tables directly...');
       
       // If no migration file exists, create tables directly
-      await db.execute(sql`
+      await pool.query(`
         CREATE TABLE IF NOT EXISTS "users" (
           "id" text PRIMARY KEY NOT NULL,
           "username" text NOT NULL,
@@ -34,7 +51,7 @@ async function setupDatabase() {
         );
       `);
 
-      await db.execute(sql`
+      await pool.query(`
         CREATE TABLE IF NOT EXISTS "sessions" (
           "sid" text PRIMARY KEY NOT NULL,
           "sess" jsonb NOT NULL,
@@ -42,7 +59,7 @@ async function setupDatabase() {
         );
       `);
 
-      await db.execute(sql`
+      await pool.query(`
         CREATE TABLE IF NOT EXISTS "sections" (
           "id" serial PRIMARY KEY NOT NULL,
           "title" text NOT NULL,
@@ -52,7 +69,7 @@ async function setupDatabase() {
         );
       `);
 
-      await db.execute(sql`
+      await pool.query(`
         CREATE TABLE IF NOT EXISTS "lessons" (
           "id" serial PRIMARY KEY NOT NULL,
           "section_id" integer NOT NULL,
@@ -63,7 +80,7 @@ async function setupDatabase() {
         );
       `);
 
-      await db.execute(sql`
+      await pool.query(`
         CREATE TABLE IF NOT EXISTS "problems" (
           "id" serial PRIMARY KEY NOT NULL,
           "lesson_id" integer NOT NULL,
@@ -83,7 +100,7 @@ async function setupDatabase() {
         );
       `);
 
-      await db.execute(sql`
+      await pool.query(`
         CREATE TABLE IF NOT EXISTS "user_progress" (
           "id" serial PRIMARY KEY NOT NULL,
           "user_id" text NOT NULL,
@@ -97,7 +114,7 @@ async function setupDatabase() {
         );
       `);
 
-      await db.execute(sql`
+      await pool.query(`
         CREATE TABLE IF NOT EXISTS "code_submissions" (
           "id" serial PRIMARY KEY NOT NULL,
           "user_id" text NOT NULL,
@@ -111,7 +128,7 @@ async function setupDatabase() {
         );
       `);
 
-      await db.execute(sql`
+      await pool.query(`
         CREATE TABLE IF NOT EXISTS "achievements" (
           "id" serial PRIMARY KEY NOT NULL,
           "user_id" text NOT NULL,
@@ -136,7 +153,7 @@ async function setupDatabase() {
       
       for (const statement of statements) {
         if (statement.trim()) {
-          await db.execute(sql.raw(statement));
+          await pool.query(statement);
         }
       }
       
@@ -144,19 +161,21 @@ async function setupDatabase() {
     }
     
     // Verify tables exist
-    const result = await db.execute(sql`
+    const result = await pool.query(`
       SELECT table_name 
       FROM information_schema.tables 
       WHERE table_schema = 'public'
       ORDER BY table_name;
     `);
     
-    console.log('📋 Created tables:', result.rows.map(r => r.table_name).join(', '));
+    console.log('📋 Created tables:', result.rows.map((r: any) => r.table_name).join(', '));
     console.log('✅ Database setup complete!');
     
   } catch (error) {
     console.error('❌ Database setup failed:', error);
     process.exit(1);
+  } finally {
+    await pool.end();
   }
 }
 
