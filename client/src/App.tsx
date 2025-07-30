@@ -8,6 +8,7 @@ import Dashboard from "@/pages/dashboard";
 import Problem from "@/pages/problem";
 import NotFound from "@/pages/not-found";
 import Landing from "@/pages/landing";
+import AuthCallback from "@/pages/auth-callback";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -25,6 +26,7 @@ function Router() {
 
   return (
     <Switch>
+      <Route path="/auth/callback" component={AuthCallback} />
       {isAuthenticated ? (
         <>
           <Route path="/" component={Dashboard} />

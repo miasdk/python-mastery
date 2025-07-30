@@ -24,7 +24,15 @@ export default function Landing() {
     console.log('🚀 Starting GitHub OAuth...');
     // Clear any previous errors
     setError(null);
-    window.location.href = '/api/auth/github';
+    
+    // Direct GitHub OAuth - much simpler!
+    const clientId = 'Ov23liZD5qc4zhS7jSnE';
+    const redirectUri = window.location.origin + '/auth/callback';
+    const scope = 'user:email';
+    
+    const githubUrl = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scope}`;
+    
+    window.location.href = githubUrl;
   };
 
   const features = [
