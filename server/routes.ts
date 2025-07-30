@@ -247,10 +247,87 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
-  // GitHub OAuth routes
-  app.get('/api/auth/github', (req, res, next) => {
-    console.log('🚀 Starting GitHub OAuth flow');
-    passport.authenticate('github', { scope: ['user:email'] })(req, res, next);
+  // GitHub OAuth code exchange (simplified)
+  app.post('/api/auth/github/exchange', async (req, res) => {
+    try {
+      const { code } = req.body;
+      
+      if (!code) {
+        return res.status(400).json({ error: 'Authorization code required' });
+      }
+
+      // Exchange code for access token
+      const tokenResponse = await fetch('https://github.com/login/oauth/access_token', {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          client_id: process.env.GITHUB_CLIENT_ID,
+          client_secret: process.env.GITHUB_CLIENT_SECRET,
+          code: code,
+        }),
+      });
+
+      const tokenData = await tokenResponse.json();
+      
+      if (tokenData.error) {
+        throw new Error(tokenData.error_description || 'Token exchange failed');
+      }
+
+      // Get user info from GitHub
+      const userResponse = await fetch('https://api.github.com/user', {
+        headers: {
+          'Authorization': `Bearer ${tokenData.access_token}`,
+          'Accept': 'application/vnd.github.v3+json',
+        },
+      });
+
+      const githubUser = await userResponse.json();
+      
+      // Create or find user in database
+      const githubUserId = `github_${githubUser.id}`;
+      
+      const existingUser = await database
+        .select()
+        .from(schema.users)
+        .where(eq(schema.users.id, githubUserId))
+        .limit(1);
+      
+      let user;
+      if (existingUser.length > 0) {
+        user = existingUser[0];
+      } else {
+        const newUser = await database
+          .insert(schema.users)
+          .values({
+            id: githubUserId,
+            username: githubUser.login || githubUser.name || 'GitHub User',
+            email: githubUser.email || '',
+            firstName: githubUser.name ? githubUser.name.split(' ')[0] : '',
+            lastName: githubUser.name ? githubUser.name.split(' ').slice(1).join(' ') : '',
+            profileImageUrl: githubUser.avatar_url || '',
+            currentStreak: 0,
+            totalProblems: 0,
+            totalXp: 0,
+            currentSection: 1,
+            currentLesson: 1,
+          })
+          .returning();
+        
+        user = newUser[0];
+      }
+
+      // Create session
+      (req as any).session.userId = user.id;
+      
+      res.json({ success: true, user });
+      
+    } catch (error) {
+      console.error('GitHub OAuth exchange error:', error);
+      res.status(500).json({ error: 'Authentication failed' });
+    }
   });
 
   app.get('/api/auth/github/callback', 
