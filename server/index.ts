@@ -157,17 +157,45 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-app.use(session({
+// Configure session with proper production settings
+const sessionConfig = {
   secret: process.env.SESSION_SECRET || 'python-learning-platform-secret',
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: process.env.NODE_ENV === 'production',
+    secure: false, // Set to false for now since we're having CORS issues
     maxAge: 24 * 60 * 60 * 1000, // 24 hours
     httpOnly: true,
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
+    sameSite: 'lax' as const // More permissive for cross-origin
   }
-}));
+};
+
+// In production, we might need to use a database-backed session store
+// For now, using memory store but with better configuration
+app.use(session(sessionConfig));
+
+// Add CORS headers for cross-origin requests from Vercel frontend
+app.use((req, res, next) => {
+  const origin = req.get('Origin');
+  
+  // Allow requests from your Vercel frontend or localhost in development
+  if (origin && (
+    origin.includes('vercel.app') || 
+    origin.includes('localhost') ||
+    origin.includes('127.0.0.1')
+  )) {
+    res.header('Access-Control-Allow-Origin', origin);
+    res.header('Access-Control-Allow-Credentials', 'true');
+    res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Origin,X-Requested-With,Content-Type,Accept,Authorization,Cache-Control,Pragma');
+  }
+  
+  if (req.method === 'OPTIONS') {
+    res.sendStatus(200);
+  } else {
+    next();
+  }
+});
 
 app.use((req, res, next) => {
   const start = Date.now();

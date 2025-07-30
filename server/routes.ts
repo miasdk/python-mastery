@@ -154,9 +154,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/auth/demo-login', async (req, res) => {
     try {
       console.log('🎭 Demo login requested');
-      (req as any).session = (req as any).session || {};
+      console.log('Session before:', (req as any).session?.userId);
+      
+      // Ensure session exists
+      if (!(req as any).session) {
+        console.log('⚠️  No session object found');
+        return res.status(500).json({ error: "Session not available" });
+      }
+      
+      // Set user ID in session
       (req as any).session.userId = DEFAULT_USER_ID;
-      res.redirect('/');
+      
+      // Save session explicitly
+      (req as any).session.save((err: any) => {
+        if (err) {
+          console.error('❌ Session save error:', err);
+          return res.status(500).json({ error: "Failed to save session" });
+        }
+        
+        console.log('✅ Session saved with userId:', DEFAULT_USER_ID);
+        console.log('Session after:', (req as any).session?.userId);
+        
+        // Redirect to the frontend
+        const frontendUrl = process.env.NODE_ENV === 'production' 
+          ? process.env.FRONTEND_URL || 'https://your-app.vercel.app'
+          : 'http://localhost:5173';
+        
+        res.redirect(frontendUrl);
+      });
     } catch (error) {
       console.error("❌ Demo login error:", error);
       res.status(500).json({ error: "Login failed" });
@@ -166,8 +191,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth user endpoint
   app.get('/api/auth/user', async (req, res) => {
     try {
+      console.log('🔍 Auth check - Session ID:', (req as any).session?.id);
+      console.log('🔍 Auth check - User ID:', (req as any).session?.userId);
+      console.log('🔍 Auth check - Session exists:', !!(req as any).session);
+      
       const sessionUserId = (req as any).session?.userId;
       if (!sessionUserId) {
+        console.log('❌ No userId in session');
         return res.status(401).json({ error: "Not authenticated" });
       }
 
