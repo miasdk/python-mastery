@@ -25,7 +25,7 @@
         },
         {
           "key": "Access-Control-Allow-Origin",
-          "value": "*"
+          "value": "https://python-mastery-smoky.vercel.app"
         },
         {
           "key": "Access-Control-Allow-Methods",
